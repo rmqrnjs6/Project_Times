@@ -2,6 +2,10 @@
 
 공유 대화의 설계를 바탕으로 다시 구현한 **로컬 개발용 검증 작업대**입니다. Spring Boot MVC·Spring Security·JSP·Python FastAPI·PostgreSQL·Docker로 구성합니다. 실제 AI 판별 서비스의 완성본은 아닙니다.
 
+## 직접 검토
+
+이미 로컬 `.env`와 Docker 환경이 준비됐다면 **`REVIEW.bat`를 더블클릭**하세요. 실행 상태를 확인한 뒤 브라우저와 로컬 로그인 안내를 엽니다. 비밀번호는 Git에서 제외한 `artifacts/review/LOGIN.txt`에만 기록하며 공개하지 않습니다. [검토 순서와 기대 결과](docs/REVIEW_GUIDE.md)를 따라 확인할 수 있습니다.
+
 ## 시작
 
 Docker Desktop을 실행하고 `.env.example`을 `.env`로 복사한 뒤 `DB_PASSWORD`와 16~64바이트의 무작위 `BOOTSTRAP_PASSWORD`를 설정합니다. 예제에는 비밀번호 기본값이 없어 설정 전에는 시작되지 않습니다. 기존 `.env`는 덮어쓰지 않습니다. `.env`는 커밋하지 않습니다.

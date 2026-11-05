@@ -1,4 +1,6 @@
 # Byte-compiled / optimized / DLL files
+web/target/
+artifacts/
 __pycache__/
 *.py[codz]
 *$py.class
@@ -218,3 +220,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Reviewed synthetic verification output only; runtime logs remain ignored.
+!docs/verification/*.log

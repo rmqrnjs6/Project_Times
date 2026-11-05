@@ -1,6 +1,6 @@
 # Project_Times starter guide
 
-This repository includes a reusable Python FastAPI + Docker starter. Original root README.md and .gitignore are preserved.
+Historical starter guide. The active project is now JSP/Java + Python + PostgreSQL; use the root README for current commands. The instructions below describe the earlier Python-only template and do not describe the current compose services.
 
 ## Local run
 

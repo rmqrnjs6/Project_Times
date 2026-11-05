@@ -1,0 +1,3 @@
+PASS backup and restore row counts: 7|13|2
+Restore database retained for inspection: times_restore_20261105191322
+Local backup: artifacts/times_restore_20261105191322.dump (not committed)

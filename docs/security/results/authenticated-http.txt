@@ -1,0 +1,23 @@
+PASS anonymous API access denied
+PASS session cookie is HttpOnly and SameSite Strict
+PASS real database-backed login succeeds
+PASS session identifier rotated at login
+PASS pre-login CSRF token rejected after authentication
+PASS JSP renders Korean workbench
+PASS security headers
+PASS Java -> Python and PostgreSQL readiness
+PASS question persistence returns ID
+PASS stored UTF-8 question can be read
+PASS empty question rejected
+PASS form submissions rejected
+PASS cross-origin writes rejected
+PASS evaluation is persisted with run ID
+PASS unknown retained and expert unreviewed
+PASS reference policy recorded
+PASS reviewed composite missing without expert
+PASS invalid counts rejected through Java
+PASS request size bounded
+PASS external intake denied by default empty allowlist
+PASS logout succeeds with CSRF
+PASS logged-out session cannot read data
+Integration complete. Authentication tested with actual DB; factual judgments and production deployment remain outside scope.

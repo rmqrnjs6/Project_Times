@@ -1,0 +1,6 @@
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.678 s -- in dev.projecttimes.ProductionTransportTest
+[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.516 s -- in dev.projecttimes.SecurityMvcTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.395 s -- in dev.projecttimes.AuthBootstrapTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s -- in dev.projecttimes.ExternalMaterialPolicyTest
+[INFO] Tests run: 45, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS

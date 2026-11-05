@@ -22,7 +22,9 @@ try {
     $portLine = Get-Content .env | Where-Object { $_ -match '^WEB_PORT=' } | Select-Object -First 1
     if ($portLine) { $port = [int]($portLine -split '=', 2)[1] }
     $baseUrl = "http://127.0.0.1:$port"
-    $before = Invoke-RestMethod "$baseUrl/api/checks"
+    $query = "SELECT count(*)::text || ':' || md5(COALESCE(string_agg(id::text || question,'' ORDER BY id),'')) FROM diagnostic_checks"
+    $before = docker compose exec -T db psql -U project_times -d project_times -At -c $query
+    if ($LASTEXITCODE) { throw 'source persistence query failed' }
     Invoke-TimesDocker compose stop analysis
     $failureStatus = 0
     try { Invoke-WebRequest "$baseUrl/ready" -UseBasicParsing | Out-Null }
@@ -41,9 +43,8 @@ try {
     Write-Output 'PASS analysis restarted -> Java readiness HTTP 200'
     Invoke-TimesDocker compose restart web
     Wait-TimesReady $baseUrl
-    $after = Invoke-RestMethod "$baseUrl/api/checks"
-    foreach ($row in $before) {
-        if (-not ($after | Where-Object { $_.id -eq $row.id -and $_.question -eq $row.question })) { throw 'saved question missing after restart' }
-    }
-    Write-Output "PASS web restart retained $($before.Count) previously visible questions"
+    $after = docker compose exec -T db psql -U project_times -d project_times -At -c $query
+    if ($LASTEXITCODE) { throw 'restored persistence query failed' }
+    if (($before -join '') -ne ($after -join '')) { throw 'saved question digest changed after restart' }
+    Write-Output 'PASS web restart retained all saved question IDs and content (aggregate digest compared)'
 } finally { Pop-Location }

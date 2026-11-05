@@ -24,7 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cp .env.example .env
+      - name: Create ephemeral test credentials without logging them
+        run: |
+          cp .env.example .env
+          printf 'DB_PASSWORD=%s\n' "$(openssl rand -hex 24)" >> .env
+          printf 'BOOTSTRAP_PASSWORD=%s\n' "$(openssl rand -hex 24)" >> .env
       - run: docker compose up -d --build
       - name: Wait for web and dependencies
         run: |
@@ -34,6 +38,12 @@ jobs:
           done
           docker compose logs
           exit 1
-      - run: docker compose exec -T analysis python - < scripts/integration_check.py
+      - name: Authenticated integration checks
+        run: |
+          set -a
+          . ./.env
+          set +a
+          export TEST_LOGIN_PASSWORD="$BOOTSTRAP_PASSWORD"
+          docker compose exec -T -e TEST_LOGIN_PASSWORD analysis python - < scripts/integration_check.py
       - if: always()
         run: docker compose down

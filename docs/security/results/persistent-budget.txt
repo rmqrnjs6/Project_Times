@@ -1,0 +1,5 @@
+PASS actual login budget phase: exhaust (10 failures allowed; request 11 denied)
+No bootstrap credentials used. Budget persistence checked before the runner cleans its disposable fixture.
+PASS actual login budget phase: verify (10 failures allowed; request 11 denied)
+No bootstrap credentials used. Budget persistence checked before the runner cleans its disposable fixture.
+PASS login budget survives web restart from the same isolated client address

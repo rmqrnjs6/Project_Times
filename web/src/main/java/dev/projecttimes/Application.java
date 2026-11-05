@@ -1,13 +1,11 @@
 package dev.projecttimes;
-import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebListener;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
-@WebListener
-public final class Application implements ServletContextListener {
-    public void contextInitialized(ServletContextEvent event) {
-        var database = new Database();
-        database.migrate();
-        event.getServletContext().setAttribute("database", database);
-        event.getServletContext().setAttribute("analysis", new AnalysisService());
-    }
+@SpringBootApplication
+public class Application extends SpringBootServletInitializer {
+    public static void main(String[] args) { SpringApplication.run(Application.class, args); }
+    @Override protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) { return builder.sources(Application.class); }
 }

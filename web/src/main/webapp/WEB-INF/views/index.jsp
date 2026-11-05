@@ -1,7 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Project Times · 검증 작업대</title><link rel="stylesheet" href="/style.css"><script src="/workbench.js" defer></script></head>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="_csrf" content="${_csrf.token}"><meta name="_csrf_header" content="${_csrf.headerName}"><title>Project Times · 검증 작업대</title><link rel="stylesheet" href="/style.css"><script src="/workbench.js" defer></script></head>
 <body><main><header><p>PROJECT TIMES · 개발 기반 v0.1</p><h1>근거를 남기는 검증 작업대</h1><p>다중 AI · 원본 근거 · 독립 전문가 검토를 연결하기 위한 개발 기반입니다.</p></header>
-<aside>현재는 연결 확인과 입력된 판정 수량의 산술 계산만 제공합니다. 실제 사실 판별·AI 호출·로그인·전문가 검토는 구현되지 않았습니다.</aside>
+<aside>로그인한 계정의 연결 점검과 산술 계산을 제공합니다. 실제 사실 판별·AI 호출·전문가 검토는 아직 구현하지 않았습니다.</aside>
+<form method="post" action="/logout"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><button>로그아웃</button></form>
 <section><h2>서비스 연결 확인</h2><button id="health">Java · Python · DB 확인</button><output id="health-result" aria-live="polite"></output></section>
 <section><h2>질문 저장 · 연결 점검</h2><p>질문은 PostgreSQL에 저장됩니다. 검증 실행이나 AI 응답 생성은 하지 않습니다.</p><form id="question-form"><label for="question">확인할 질문</label><textarea id="question" required maxlength="2000"></textarea><button>저장하고 연결 확인</button></form><output id="question-result" aria-live="polite"></output><ul id="checks"></ul></section>
 <section><h2>7축 참조 계산기</h2><p>F 정확성 · S 공신력 · I 독립성 · T 시간 적합성 · C 일치성 · R 모순 위험 · E 전문가 검증</p><p>각 항목의 지지·반박·미확인 수량을 입력하세요. R은 모순 위험의 긍정·부정 판정 수량이며, 종합 계산에서 한 번 역변환합니다. 미검토 E는 null로 남깁니다.</p>

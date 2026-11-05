@@ -2,17 +2,28 @@
 Synthetic inputs only. No paid API calls. Persists diagnostic/calculation rows.
 """
 import json
-from urllib.request import Request, urlopen
+import os
+from http.cookiejar import CookieJar
+from urllib.parse import urlencode
+from urllib.request import Request, build_opener, HTTPCookieProcessor, HTTPRedirectHandler
 from urllib.error import HTTPError
 
-BASE = 'http://web:8080'
+BASE = os.environ.get('TEST_BASE_URL', 'http://ingress:8080')
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+cookies = CookieJar()
+opener = build_opener(HTTPCookieProcessor(cookies), NoRedirect())
+csrf_token = None
 
 def call(path, data=None, headers=None, raw=None):
     body = json.dumps(data).encode() if data is not None else raw
-    request = Request(BASE + path, data=body,
-                      headers=headers or ({'Content-Type': 'application/json'} if body else {}))
+    request_headers = dict(headers or ({'Content-Type': 'application/json'} if body else {}))
+    if body is not None and csrf_token:
+        request_headers['X-CSRF-TOKEN'] = csrf_token
+    request = Request(BASE + path, data=body, headers=request_headers)
     try:
-        with urlopen(request, timeout=12) as response:
+        with opener.open(request, timeout=12) as response:
             return response.status, response.read().decode(), response.headers
     except HTTPError as error:
         return error.code, error.read().decode(), error.headers
@@ -21,11 +32,35 @@ def check(name, condition):
     assert condition, name
     print('PASS ' + name, flush=True)
 
+status, _, _ = call('/api/checks')
+check('anonymous API access denied', status == 401)
+status, body, headers = call('/api/csrf')
+csrf_token = json.loads(body)['token']
+old_token = csrf_token
+old_session = next(cookie.value for cookie in cookies if cookie.name == 'JSESSIONID')
+cookie_headers = ';'.join(headers.get_all('Set-Cookie', []))
+check('session cookie is HttpOnly and SameSite Strict', 'HttpOnly' in cookie_headers and 'SameSite=Strict' in cookie_headers)
+password = os.environ.get('TEST_LOGIN_PASSWORD')
+if not password:
+    raise RuntimeError('TEST_LOGIN_PASSWORD must be supplied without logging it')
+status, _, login_headers = call('/login', raw=urlencode({'username': os.environ.get('TEST_LOGIN_USERNAME', 'owner'), 'password': password}).encode(), headers={'Content-Type': 'application/x-www-form-urlencoded'})
+if status != 302:
+    print('Observed login HTTP status: ' + str(status), flush=True)
+check('real database-backed login succeeds', status == 302 and login_headers.get('Location', '').rstrip('/') in ('', BASE))
+new_session = next(cookie.value for cookie in cookies if cookie.name == 'JSESSIONID')
+check('session identifier rotated at login', old_session != new_session)
+status, body, _ = call('/api/csrf')
+csrf_token = json.loads(body)['token']
+new_token = csrf_token
+csrf_token = old_token
+status, _, _ = call('/api/checks', {'question': 'old csrf rejected'})
+check('pre-login CSRF token rejected after authentication', status == 403)
+csrf_token = new_token
 status, body, headers = call('/')
 check('JSP renders Korean workbench', status == 200 and '검증 작업대' in body and '<%@' not in body)
 check('security headers', headers['X-Content-Type-Options'] == 'nosniff' and "frame-ancestors 'none'" in headers['Content-Security-Policy'])
 status, body, _ = call('/ready')
-check('Java -> Python and PostgreSQL readiness', status == 200 and json.loads(body)['database'] == 'ok')
+check('Java -> Python and PostgreSQL readiness', status == 200 and json.loads(body)['status'] == 'ok')
 question = 'QA synthetic question: <script>alert(1)</script> 한글 보존'
 status, body, _ = call('/api/checks', {'question': question})
 check('question persistence returns ID', status == 201 and json.loads(body)['kind'] == 'connectivity_only')
@@ -51,4 +86,10 @@ status, _, _ = call('/api/evaluate', {'axes': axes})
 check('invalid counts rejected through Java', status == 422)
 status, _, _ = call('/api/checks', raw=b'x' * 32769, headers={'Content-Type': 'application/json'})
 check('request size bounded', status == 413)
-print('Integration checks complete; these checks do not verify factual judgments or authentication.')
+status, body, _ = call('/api/materials', {'sourceUrl': 'https://example.org/source', 'content': 'synthetic external text', 'mediaType': 'text/plain'})
+check('external intake denied by default empty allowlist', status == 400)
+status, _, _ = call('/logout', raw=b'', headers={'Content-Type': 'application/x-www-form-urlencoded'})
+check('logout succeeds with CSRF', status == 302)
+status, _, _ = call('/api/checks')
+check('logged-out session cannot read data', status == 401)
+print('Integration complete. Authentication tested with actual DB; factual judgments and production deployment remain outside scope.')

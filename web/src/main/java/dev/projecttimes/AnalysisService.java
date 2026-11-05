@@ -3,7 +3,8 @@ import java.net.*;
 import java.net.http.*;
 import java.time.Duration;
 
-public final class AnalysisService {
+@org.springframework.stereotype.Service
+public class AnalysisService {
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
     private final String base = System.getenv().getOrDefault("ANALYSIS_URL", "http://analysis:8000");
     public HttpResponse<String> call(String path, String json) throws Exception {

@@ -1,0 +1,7 @@
+Captured from live Docker configuration and /proc/net/route observation on 2026-11-06 Asia/Seoul.
+PASS backend Docker network is internal
+PASS web read-only filesystem and explicit nonroot user
+PASS analysis read-only filesystem and explicit nonroot user
+PASS ingress read-only filesystem and explicit nonroot user
+PASS analysis has no IPv4 default route
+Scope: configuration/route observation only; not an adversarial network penetration test.

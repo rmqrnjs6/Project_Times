@@ -2,7 +2,10 @@ const byId = id => document.getElementById(id);
 const axes = Object.fromEntries(['F', 'S', 'I', 'T', 'C', 'R', 'E'].map(a => [a, a === 'E' ? null : {positive: 6, negative: 2, unknown: 2}]));
 byId('axes').value = JSON.stringify(axes, null, 2);
 async function request(path, data) {
-  const response = await fetch(path, data === undefined ? {} : {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+  const csrf = document.querySelector('meta[name="_csrf"]').content;
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+  const response = await fetch(path, data === undefined ? {} : {method: 'POST', headers: {'Content-Type': 'application/json', [csrfHeader]: csrf}, body: JSON.stringify(data)});
+  if (response.status === 401) { window.location.assign('/login'); throw new Error('로그인이 필요합니다.'); }
   const result = await response.json();
   if (!response.ok) throw new Error(`${response.status}: ${result.error || '요청 실패'}`);
   return result;

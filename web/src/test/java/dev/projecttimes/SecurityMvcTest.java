@@ -28,6 +28,7 @@ class SecurityMvcTest {
     @Autowired PasswordEncoder encoder;
     @Autowired org.springframework.context.ApplicationContext context;
     @MockitoBean Database database;
+    @MockitoBean TaskStore taskStore;
     @MockitoBean AnalysisService analysis;
     @MockitoBean UserDetailsService users;
     @MockitoBean LoginAttemptStore attempts;

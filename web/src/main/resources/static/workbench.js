@@ -6,6 +6,7 @@ async function request(path, data) {
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
   const response = await fetch(path, data === undefined ? {} : {method: 'POST', headers: {'Content-Type': 'application/json', [csrfHeader]: csrf}, body: JSON.stringify(data)});
   if (response.status === 401) { window.location.assign('/login'); throw new Error('로그인이 필요합니다.'); }
+  if (response.status === 204) return null;
   const result = await response.json();
   if (!response.ok) throw new Error(`${response.status}: ${result.error || '요청 실패'}`);
   return result;
@@ -29,3 +30,57 @@ byId('evaluation-form').onsubmit = async e => {
   catch (error) {byId('evaluation-result').textContent = '계산하지 못했습니다.'; byId('evaluation-error').textContent = error.message;}
 };
 checks().catch(error => {byId('question-result').textContent = error.message;});
+
+const taskStatus = {QUEUED:'대기', RUNNING:'실행 중', SUCCEEDED:'완료', FAILED:'실패', CANCELLED:'취소'};
+let selectedTask = null;
+async function showTask(id) {
+  const row = await request('/api/tasks/' + encodeURIComponent(id));
+  selectedTask = id;
+  byId('task-detail').textContent = JSON.stringify(row, null, 2);
+}
+async function tasks() {
+  const rows = await request('/api/tasks');
+  byId('task-list').replaceChildren(...rows.map(row => {
+    const li = document.createElement('li');
+    const view = document.createElement('button');
+    view.type = 'button';
+    view.textContent = row.question + ' · ' + (taskStatus[row.status] || row.status);
+    view.onclick = () => showTask(row.id).catch(error => {byId('task-message').textContent = error.message;});
+    li.append(view);
+    if (['QUEUED', 'RUNNING'].includes(row.status)) {
+      const cancel = document.createElement('button');
+      cancel.type = 'button'; cancel.textContent = '취소';
+      cancel.onclick = async () => {
+        cancel.disabled = true;
+        try {
+          await request('/api/tasks/' + encodeURIComponent(row.id) + '/cancel', {version: row.version});
+          byId('task-message').textContent = '작업을 취소했습니다.';
+          await tasks();
+          await showTask(row.id);
+        } catch (error) {
+          byId('task-message').textContent = error.message + ' · 새로고침 후 현재 상태를 확인하세요.';
+          cancel.disabled = false;
+        }
+      };
+      li.append(cancel);
+    }
+    return li;
+  }));
+  if (rows.length === 0) {
+    const li = document.createElement('li'); li.textContent = '등록된 작업이 없습니다.'; byId('task-list').append(li);
+  }
+}
+byId('task-form').onsubmit = async event => {
+  event.preventDefault(); byId('task-submit').disabled = true;
+  try {
+    const row = await request('/api/tasks', {question: byId('task-question').value, evidenceRequirement: byId('task-requirement').value});
+    byId('task-message').textContent = '등록 완료 · AI 실행기 연결 전까지 대기합니다.';
+    await tasks(); await showTask(row.id);
+  } catch (error) {byId('task-message').textContent = error.message;}
+  finally {byId('task-submit').disabled = false;}
+};
+byId('task-refresh').onclick = async () => {
+  try {await tasks(); if (selectedTask) await showTask(selectedTask);}
+  catch (error) {byId('task-message').textContent = error.message;}
+};
+tasks().catch(error => {byId('task-message').textContent = error.message;});

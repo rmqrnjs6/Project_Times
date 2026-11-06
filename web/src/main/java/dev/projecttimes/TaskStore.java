@@ -32,7 +32,7 @@ public class TaskStore {
         });
     }
     private void event(Connection c,UUID id,long version,String from,String to,String actor,String reason) throws SQLException {
-        try (var s=c.prepareStatement("INSERT INTO verification_task_events(task_id,version,from_status,to_status,actor,reason) VALUES (?,?,?,?,?,?,?)")) {
+        try (var s=c.prepareStatement("INSERT INTO verification_task_events(task_id,version,from_status,to_status,actor,reason) VALUES (?,?,?,?,?,?)")) {
             s.setObject(1,id); s.setLong(2,version); s.setString(3,from); s.setString(4,to); s.setString(5,actor); s.setString(6,reason); s.executeUpdate();
         }
     }

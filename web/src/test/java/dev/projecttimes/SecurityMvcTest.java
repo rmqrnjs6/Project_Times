@@ -58,6 +58,16 @@ class SecurityMvcTest {
         verify(database,never()).saveCheck(anyString(),anyString());
     }
     @Test void forgedCsrfBlocksWrite() throws Exception { mvc.perform(post("/api/checks").with(user("alice")).with(csrf().useInvalidToken()).contentType("application/json").content("{}")).andExpect(status().isForbidden()); }
+    @Test void loginPagePreservesSameOriginForBrowserFormSubmission() throws Exception {
+        mvc.perform(get("/login")).andExpect(status().isOk()).andExpect(header().string("Referrer-Policy","same-origin"));
+        mvc.perform(post("/login").header("Host","localhost").header("Origin","http://localhost").with(csrf()).param("username","alice").param("password",PASSWORD))
+            .andExpect(authenticated().withUsername("alice")).andExpect(redirectedUrl("/"));
+    }
+    @Test void opaqueOriginCannotReachCredentials() throws Exception {
+        mvc.perform(post("/login").header("Origin","null").with(csrf()).param("username","alice").param("password",PASSWORD))
+            .andExpect(status().isForbidden()).andExpect(content().json("{\"error\":\"cross_origin_rejected\"}"));
+        verifyNoInteractions(users);
+    }
     @Test void crossOriginWriteRejectedEvenWithValidToken() throws Exception { mvc.perform(post("/api/checks").with(user("alice")).with(csrf()).header("Origin","https://untrusted.invalid").contentType("application/json").content("{}")).andExpect(status().isForbidden()); }
     @Test void auditFailureInvalidatesSuccessfulLogin() throws Exception {
         doThrow(new RuntimeException("synthetic audit failure")).when(audit).record("LOGIN_SUCCESS","alice");

@@ -55,7 +55,7 @@ public class SecurityConfig {
         }));
         http.requestCache(cache -> cache.disable());
         http.headers(headers -> headers.contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'"))
-            .frameOptions(frame -> frame.deny()).referrerPolicy(ref -> ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)));
+            .frameOptions(frame -> frame.deny()).referrerPolicy(ref -> ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN)));
         if (!environment.matchesProfiles("local")) http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
         http.addFilterBefore(new RequestSizeFilter(),CsrfFilter.class);
         http.addFilterBefore(new LoginAttemptFilter(attempts),UsernamePasswordAuthenticationFilter.class);

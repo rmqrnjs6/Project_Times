@@ -18,7 +18,13 @@
 
 VS Code Simple Browser 대신 Edge 또는 Chrome의 일반 창에서 `http://127.0.0.1:18080/login`을 연다. 현재 서비스는 CSP `frame-ancestors 'none'`과 X-Frame-Options DENY로 프레임 삽입을 차단하므로 Simple Browser를 검토 환경으로 지원하지 않는다.
 
-`cross_origin_rejected`는 쓰기 요청의 Origin이 접속 주소와 다를 때 발생한다. 내장 화면에서 발생했다면 일반 브라우저로 이동하고 로그인 페이지를 새로 열어 입력한다. 정확한 실패 요청 헤더는 확보하지 않았으므로 해당 오류의 직접 원인은 미확인이다. 2026-11-06 KST에 `127.0.0.1`과 `localhost` 각각의 동일 출처 Origin 헤더 및 CSRF 토큰으로 실제 로그인을 재실행하여 두 주소 모두 HTTP 200과 작업대 이동을 확인했다. 출처 검사와 CSRF 보호는 유지한다.
+`cross_origin_rejected` 관련 수정(2026-11-06 KST): 기존 서버의 `Referrer-Policy: no-referrer`는 브라우저의 HTML 폼 POST에서 `Origin: null`을 유발할 수 있으나 출처 필터는 이를 거부했다. 앞선 수동 HTTP 검증은 정상 Origin을 직접 지정하여 이 충돌을 놓쳤다. 프레임 제한과는 별개의 서버 설정 문제다.
+
+정책을 `same-origin`으로 변경했다. 외부 사이트로의 Referer 전송은 제한하면서 동일 출처 폼의 Origin을 유지한다. 출처 검사와 CSRF 보호는 유지하며 `null` 출처를 허용하지 않는다. 기존 로그인 탭을 닫고 주소를 다시 열거나 새로고침한 뒤 로그인한다.
+
+검증: Java 47건 통과(실패·오류·건너뜀 0), 실행 서버의 응답 정책 `same-origin`, 동일 출처 로그인 HTTP 200 및 `/` 이동, `Origin: null` 요청 403을 확인했다. 브라우저 자체의 폼 제출을 자동화한 결과는 아니며 사용자 Edge에서의 최종 확인은 남아 있다. 원래 실패 요청의 헤더는 확보하지 못했다.
+
+근거: [MDN Referrer-Policy — Origin에 미치는 영향](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Referrer-Policy). 로컬 빌드 로그는 `artifacts/review/login-fix-build.log`에 보존한다.
 
 ## 화면에서 확인할 순서
 

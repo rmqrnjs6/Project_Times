@@ -33,10 +33,25 @@ checks().catch(error => {byId('question-result').textContent = error.message;});
 
 const taskStatus = {QUEUED:'대기', RUNNING:'실행 중', SUCCEEDED:'완료', FAILED:'실패', CANCELLED:'취소'};
 let selectedTask = null;
+let taskSelectionRequest = 0;
 async function showTask(id) {
+  const sequence = ++taskSelectionRequest;
   const row = await request('/api/tasks/' + encodeURIComponent(id));
+  if (sequence !== taskSelectionRequest) return;
+  if (selectedTask !== id) { byId('note-form').reset(); byId('note-message').textContent = ''; }
   selectedTask = id;
   byId('task-detail').textContent = JSON.stringify(row, null, 2);
+  byId('task-summary').textContent = `${row.question} · ${taskStatus[row.status] || row.status} · 버전 ${row.version}`;
+  byId('note-fields').disabled = false;
+  byId('task-export').disabled = false;
+  byId('note-list').replaceChildren(...(row.notes || []).map(note => {
+    const li = document.createElement('li');
+    const label = {SUPPORTS:'지지', CONTRADICTS:'반박', UNVERIFIED:'미확인'}[note.stance] || note.stance;
+    for (const text of [`${label} · ${note.created_at}`, `출처: ${note.source_url}`, `원문: ${note.original_text}`, `해석: ${note.interpretation}`]) {
+      const p = document.createElement('p'); p.textContent = text; li.append(p);
+    }
+    return li;
+  }));
 }
 async function tasks() {
   const rows = await request('/api/tasks');
@@ -84,3 +99,22 @@ byId('task-refresh').onclick = async () => {
   catch (error) {byId('task-message').textContent = error.message;}
 };
 tasks().catch(error => {byId('task-message').textContent = error.message;});
+
+byId('note-form').onsubmit = async event => {
+  event.preventDefault();
+  const task = selectedTask;
+  if (!task) return;
+  byId('note-submit').disabled = true;
+  try {
+    await request('/api/tasks/' + encodeURIComponent(task) + '/notes', {
+      sourceUrl: byId('note-source').value, originalText: byId('note-original').value,
+      interpretation: byId('note-interpretation').value, stance: byId('note-stance').value
+    });
+    byId('note-message').textContent = '수동 검토 기록 저장 완료. 자동 사실 검증이나 전문가 인증 결과가 아닙니다.';
+    if (selectedTask === task) {byId('note-form').reset(); await showTask(task);}
+  } catch (error) {byId('note-message').textContent = error.message;}
+  finally {byId('note-submit').disabled = false;}
+};
+byId('task-export').onclick = () => {
+  if (selectedTask) window.location.assign('/api/tasks/' + encodeURIComponent(selectedTask) + '/export');
+};

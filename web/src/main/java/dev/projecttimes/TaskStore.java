@@ -69,7 +69,32 @@ public class TaskStore {
                     events.add(e);
                 }}
             }
-            task.put("events",events); return task;
+            task.put("events",events);
+            var notes=new ArrayList<Map<String,Object>>();
+            try(var s=c.prepareStatement("SELECT id,author,source_url,original_text,interpretation,stance,created_at FROM verification_notes WHERE task_id=? ORDER BY created_at,id")) {
+                s.setObject(1,id);
+                try(var r=s.executeQuery()) { while(r.next()) {
+                    var note=new LinkedHashMap<String,Object>();
+                    for(String name:List.of("id","author","source_url","original_text","interpretation","stance","created_at")) note.put(name,r.getString(name));
+                    notes.add(note);
+                }}
+            }
+            task.put("notes",notes); return task;
+        });
+    }
+    /** Append only: no HTTP update/delete route. Owner check and insert share a transaction. */
+    public UUID addNote(String owner,UUID task,String sourceUrl,String original,String interpretation,String stance) throws Exception {
+        return transaction(c -> {
+            try(var s=c.prepareStatement("SELECT id FROM verification_tasks WHERE id=? AND owner_key=? FOR UPDATE")) {
+                s.setObject(1,task); s.setString(2,owner);
+                try(var r=s.executeQuery()) { if(!r.next()) throw new RequestFailure(404,"task_not_found"); }
+            }
+            var id=UUID.randomUUID();
+            try(var s=c.prepareStatement("INSERT INTO verification_notes(id,task_id,author,source_url,original_text,interpretation,stance) VALUES (?,?,?,?,?,?,?)")) {
+                s.setObject(1,id); s.setObject(2,task); s.setString(3,owner); s.setString(4,sourceUrl);
+                s.setString(5,original); s.setString(6,interpretation); s.setString(7,stance); s.executeUpdate();
+            }
+            return id;
         });
     }
     public void cancel(String owner,UUID id,long expectedVersion) throws Exception {

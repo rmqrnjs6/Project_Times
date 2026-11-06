@@ -115,4 +115,21 @@ class TaskStoreTest {
             assertEquals(2L,row.get("version")); assertEquals(3,((List<?>)row.get("events")).size());
         }
     }
+
+    @Test void manualNotesPreserveOriginalAndCorrectionsWithoutChangingExecutionStatus() throws Exception {
+        store.addNote("task-alice",task,"https://example.org/source"," original <script> ","first interpretation","SUPPORTS");
+        store.addNote("task-alice",task,"https://example.org/source","new excerpt","correction of first interpretation","UNVERIFIED");
+        var row=store.detail("task-alice",task);
+        var notes=(List<?>)row.get("notes");
+        assertEquals(2,notes.size());
+        assertEquals(" original <script> ",((Map<?,?>)notes.get(0)).get("original_text"));
+        assertEquals("SUPPORTS",((Map<?,?>)notes.get(0)).get("stance"));
+        assertEquals("UNVERIFIED",((Map<?,?>)notes.get(1)).get("stance"));
+        assertEquals("QUEUED",row.get("status")); assertEquals(0L,row.get("version"));
+    }
+    @Test void otherOwnerCannotAppendNotesAndFailedInsertLeavesNoNote() throws Exception {
+        assertEquals(404,assertThrows(RequestFailure.class,()->store.addNote("task-bob",task,"https://example.org","text","reason","SUPPORTS")).status);
+        assertThrows(SQLException.class,()->store.addNote("task-alice",task,"https://example.org","text","reason","INVALID"));
+        assertEquals(0,((List<?>)store.detail("task-alice",task).get("notes")).size());
+    }
 }

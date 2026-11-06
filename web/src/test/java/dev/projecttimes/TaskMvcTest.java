@@ -63,4 +63,33 @@ class TaskMvcTest {
         mvc.perform(post("/api/tasks/"+id+"/complete").with(user("alice")).with(csrf()).contentType("application/json").content("{}")).andExpect(status().is4xxClientError());
         verifyNoInteractions(store);
     }
+
+    @Test void manualNoteUsesSessionOwnerAndKeepsOriginalSeparate() throws Exception {
+        when(store.addNote(anyString(),any(),anyString(),anyString(),anyString(),anyString())).thenReturn(UUID.randomUUID());
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json")
+            .content(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(Map.of("sourceUrl","https://example.org/source","originalText"," original ","interpretation","interpretation","stance","UNVERIFIED","owner","bob"))))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.trusted").value(false)).andExpect(jsonPath("$.fetched").value(false));
+        verify(store).addNote("alice",UUID.fromString(id),"https://example.org/source"," original ","interpretation","UNVERIFIED");
+        verifyNoInteractions(analysis);
+    }
+    @Test void invalidNoteAndSensitiveUrlRejected() throws Exception {
+        for(String source:List.of("http://example.org","javascript:alert(1)","https://user:secret@example.org","https://example.org/?token=secret")) {
+            String body=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(Map.of("sourceUrl",source,"originalText","text","interpretation","reason","stance","SUPPORTS"));
+            mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json").content("{}" )).andExpect(status().isBadRequest());
+        verifyNoInteractions(store);
+    }
+    @Test void noteRequiresCsrfAndHasNoUpdateEndpoint() throws Exception {
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).contentType("application/json").content("{}")).andExpect(status().isForbidden());
+        mvc.perform(put("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json").content("{}")).andExpect(status().is4xxClientError());
+        verifyNoInteractions(store);
+    }
+    @Test void exportUsesOwnerAndIsPrivateAttachment() throws Exception {
+        when(store.detail("alice",UUID.fromString(id))).thenReturn(Map.of("id",id,"notes",List.of()));
+        mvc.perform(get("/api/tasks/"+id+"/export?owner=bob").with(user("alice")))
+            .andExpect(status().isOk()).andExpect(header().string("Content-Disposition","attachment; filename=verification-task.json"))
+            .andExpect(header().string("Cache-Control","no-store")).andExpect(jsonPath("$.schema_version").value("1"));
+        verify(store).detail("alice",UUID.fromString(id));
+    }
 }

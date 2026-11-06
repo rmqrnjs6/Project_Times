@@ -13,6 +13,19 @@ public class TaskService {
             throw new RequestFailure(400,"invalid_evidence_requirement");
         return store.create(owner,question.strip(),requirement);
     }
+    public UUID note(String owner,String task,String source,String original,String interpretation,String stance) throws Exception {
+        UUID taskId=id(task);
+        if(original==null || original.isBlank() || original.length()>4000 || interpretation==null || interpretation.isBlank() || interpretation.length()>4000)
+            throw new RequestFailure(400,"invalid_note_text");
+        if(stance==null || !Set.of("SUPPORTS","CONTRADICTS","UNVERIFIED").contains(stance)) throw new RequestFailure(400,"invalid_note_stance");
+        if(source==null || source.length()>2048) throw new RequestFailure(400,"invalid_source_url");
+        try {
+            var uri=new java.net.URI(source);
+            if(!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost()==null || uri.getUserInfo()!=null || uri.getRawQuery()!=null || uri.getFragment()!=null || (uri.getPort()!=-1 && uri.getPort()!=443)) throw new IllegalArgumentException();
+        } catch(Exception e) { throw new RequestFailure(400,"invalid_source_url"); }
+        // Reference only: no download, parser, DNS lookup, AI processing, or trust certification.
+        return store.addNote(owner,taskId,source,original,interpretation,stance);
+    }
     private UUID id(String value) {
         try { var id=UUID.fromString(value); if(!id.toString().equalsIgnoreCase(value)) throw new IllegalArgumentException(); return id; }
         catch(IllegalArgumentException e) { throw new RequestFailure(400,"invalid_task_id"); }

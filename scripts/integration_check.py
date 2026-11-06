@@ -32,18 +32,20 @@ def check(name, condition):
     assert condition, name
     print('PASS ' + name, flush=True)
 
+status, _, policy_headers = call('/login')
+check('browser form origin preserved by referrer policy', status == 200 and policy_headers.get('Referrer-Policy') == 'same-origin')
 status, _, _ = call('/api/checks')
 check('anonymous API access denied', status == 401)
 status, body, headers = call('/api/csrf')
 csrf_token = json.loads(body)['token']
 old_token = csrf_token
 old_session = next(cookie.value for cookie in cookies if cookie.name == 'JSESSIONID')
-cookie_headers = ';'.join(headers.get_all('Set-Cookie', []))
+cookie_headers = ';'.join(policy_headers.get_all('Set-Cookie', []) + headers.get_all('Set-Cookie', []))
 check('session cookie is HttpOnly and SameSite Strict', 'HttpOnly' in cookie_headers and 'SameSite=Strict' in cookie_headers)
 password = os.environ.get('TEST_LOGIN_PASSWORD')
 if not password:
     raise RuntimeError('TEST_LOGIN_PASSWORD must be supplied without logging it')
-status, _, login_headers = call('/login', raw=urlencode({'username': os.environ.get('TEST_LOGIN_USERNAME', 'owner'), 'password': password}).encode(), headers={'Content-Type': 'application/x-www-form-urlencoded'})
+status, _, login_headers = call('/login', raw=urlencode({'username': os.environ.get('TEST_LOGIN_USERNAME', 'owner'), 'password': password}).encode(), headers={'Content-Type': 'application/x-www-form-urlencoded', 'Origin': BASE})
 if status != 302:
     print('Observed login HTTP status: ' + str(status), flush=True)
 check('real database-backed login succeeds', status == 302 and login_headers.get('Location', '').rstrip('/') in ('', BASE))
@@ -107,6 +109,17 @@ status, _, _ = call('/api/tasks/' + task_id + '/cancel', {'version': 1})
 check('terminal task cannot be changed', status == 409)
 status, _, _ = call('/api/tasks', {'question': 'invalid condition', 'evidenceRequirement': 'UNKNOWN'})
 check('invalid evidence condition rejected', status == 400)
+note_input = {'sourceUrl': 'https://example.org/reference', 'originalText': ' synthetic <script>alert(1)</script> original ', 'interpretation': 'Manual interpretation only', 'stance': 'UNVERIFIED', 'owner': 'forged-owner'}
+status, body, _ = call('/api/tasks/' + task_id + '/notes', note_input)
+check('manual note stored as untrusted reference without fetch', status == 201 and json.loads(body)['trusted'] is False and json.loads(body)['fetched'] is False)
+status, body, _ = call('/api/tasks/' + task_id)
+note = json.loads(body)['notes'][0]
+check('original and interpretation preserved separately', status == 200 and note['original_text'] == note_input['originalText'] and note['interpretation'] == note_input['interpretation'])
+status, body, headers = call('/api/tasks/' + task_id + '/export')
+check('private export includes note snapshot', status == 200 and json.loads(body)['task']['notes'][0]['id'] == note['id'] and headers.get('Cache-Control') == 'no-store' and 'attachment' in headers.get('Content-Disposition', ''))
+note_input['sourceUrl'] = 'https://example.org/?token=secret'
+status, _, _ = call('/api/tasks/' + task_id + '/notes', note_input)
+check('sensitive query source rejected', status == 400)
 status, _, _ = call('/logout', raw=b'', headers={'Content-Type': 'application/x-www-form-urlencoded'})
 check('logout succeeds with CSRF', status == 302)
 status, _, _ = call('/api/checks')

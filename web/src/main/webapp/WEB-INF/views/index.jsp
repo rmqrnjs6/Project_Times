@@ -1,13 +1,21 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="_csrf" content="${_csrf.token}"><meta name="_csrf_header" content="${_csrf.headerName}"><title>Project Times · 검증 작업대</title><link rel="stylesheet" href="/style.css"><script src="/workbench.js" defer></script></head>
 <body><main><header><p>PROJECT TIMES · 개발 기반 v0.1</p><h1>근거를 남기는 검증 작업대</h1><p>다중 AI · 원본 근거 · 독립 전문가 검토를 연결하기 위한 개발 기반입니다.</p></header>
-<aside>로그인한 계정의 연결 점검과 산술 계산을 제공합니다. 실제 사실 판별·AI 호출·전문가 검토는 아직 구현하지 않았습니다.</aside>
+<aside>로그인한 계정의 검증 작업과 수동 근거 검토 기록, 산술 계산을 제공합니다. 실제 사실 판별·AI 호출·전문가 검토는 아직 구현하지 않았습니다.</aside>
 <form method="post" action="/logout"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><button>로그아웃</button></form>
 <section><h2>검증 작업</h2><p>질문과 근거 확인 조건을 등록하고 진행 상태와 이력을 확인합니다. AI 실행기는 다음 단계에서 연결하므로 새 작업은 대기 상태로 유지됩니다.</p>
 <form id="task-form"><label for="task-question">검증할 질문</label><textarea id="task-question" required maxlength="2000"></textarea>
 <label for="task-requirement">근거 확인 조건</label><select id="task-requirement"><option value="PRIMARY_REQUIRED">1차 출처 확인 필요</option><option value="CROSS_CHECK_REQUIRED">독립 출처 교차 확인 필요</option></select><button id="task-submit">작업 등록</button></form>
 <output id="task-message" aria-live="polite"></output><button id="task-refresh">목록 새로고침</button><p>최근 작업 최대 50개를 표시합니다.</p><ul id="task-list"></ul>
-<h3>작업 상세 · 변경 이력</h3><pre id="task-detail" aria-live="polite">목록에서 작업을 선택하세요.</pre></section>
+<h3>작업 상세 · 변경 이력</h3><div id="task-summary" aria-live="polite">목록에서 작업을 선택하세요.</div>
+<button id="task-export" type="button" disabled>선택한 작업 JSON 내보내기</button>
+<h3>수동 근거 검토 기록 추가</h3><p>작업 선택 후 입력하세요. 저장 후 기존 기록을 수정하지 않습니다. 정정은 새 기록에 이유를 남기세요. URL은 참조 주소로만 보관하며 다운로드하거나 사실로 인증하지 않습니다. 개인정보·비밀번호·API 키는 입력하지 마세요.</p>
+<form id="note-form"><fieldset id="note-fields" disabled><label for="note-source">출처 HTTPS 주소 (쿼리·인증정보 제외)</label><input id="note-source" type="url" required maxlength="2048">
+<label for="note-original">원문 발췌 (최대 4,000자)</label><textarea id="note-original" required maxlength="4000"></textarea>
+<label for="note-interpretation">내 해석·판단 이유 / 정정 이유 (최대 4,000자)</label><textarea id="note-interpretation" required maxlength="4000"></textarea>
+<label for="note-stance">질문에 대한 수동 판단</label><select id="note-stance"><option value="UNVERIFIED">미확인 / 보류</option><option value="SUPPORTS">지지 근거로 판단</option><option value="CONTRADICTS">반박 근거로 판단</option></select><button id="note-submit">원문·해석 구분하여 기록</button></fieldset></form>
+<output id="note-message" aria-live="polite"></output><ul id="note-list"></ul>
+<details><summary>원본 JSON · 상태 변경 이력</summary><pre id="task-detail">목록에서 작업을 선택하세요.</pre></details></section>
 <section><h2>서비스 연결 확인</h2><button id="health">Java · Python · DB 확인</button><output id="health-result" aria-live="polite"></output></section>
 <section><h2>질문 저장 · 연결 점검</h2><p>질문은 PostgreSQL에 저장됩니다. 검증 실행이나 AI 응답 생성은 하지 않습니다.</p><form id="question-form"><label for="question">확인할 질문</label><textarea id="question" required maxlength="2000"></textarea><button>저장하고 연결 확인</button></form><output id="question-result" aria-live="polite"></output><ul id="checks"></ul></section>
 <section><h2>7축 참조 계산기</h2><p>F 정확성 · S 공신력 · I 독립성 · T 시간 적합성 · C 일치성 · R 모순 위험 · E 전문가 검증</p><p>각 항목의 지지·반박·미확인 수량을 입력하세요. R은 모순 위험의 긍정·부정 판정 수량이며, 종합 계산에서 한 번 역변환합니다. 미검토 E는 null로 남깁니다.</p>

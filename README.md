@@ -16,7 +16,7 @@ docker compose up -d --build
 
 Java·Python·DB는 내부 전용 네트워크에 있고 Nginx 진입점만 로컬호스트 포트를 노출합니다. Compose의 local 프로파일만 HTTP 개발 예외를 사용합니다. 기본 프로파일은 HTTPS를 요구합니다. 운영 TLS 배포를 완료한 구성은 아닙니다.
 
-## 현재 기능
+## 검증 작업 관리\n\n질문·근거 조건을 등록하고 본인 작업의 목록·상세·이력·취소를 제공합니다. AI 실행기는 아직 연결하지 않아 새 작업은 대기로 유지됩니다. 내부 상태 전이·임대 만료·경쟁 처리와 QA 검증 방법은 [작업 관리 QA·리뷰 안내](docs/TASK_QA_REVIEW.md)를 확인하세요.\n\n## 현재 기능
 
 - Spring Boot MVC·JSP 화면과 Java → Python·DB 준비 상태 확인.
 - DB 기반 BCrypt 로그인, CSRF·Origin 검사, 세션 ID 회전·만료·로그아웃·단일 세션, 서버 역할 검사와 소유자별 질문 조회.

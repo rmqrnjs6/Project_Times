@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProductionTransportTest {
     @Autowired MockMvc mvc;
     @MockitoBean Database database;
+    @MockitoBean TaskStore taskStore;
     @MockitoBean AnalysisService analysis;
     @MockitoBean UserDetailsService users;
     @MockitoBean LoginAttemptStore attempts;

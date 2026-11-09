@@ -4,20 +4,20 @@
 <aside>로그인한 계정의 검증 작업과 수동 근거 검토 기록, 산술 계산을 제공합니다. 실제 사실 판별·AI 호출·전문가 검토는 아직 구현하지 않았습니다.</aside>
 <form method="post" action="/logout"><input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"><button>로그아웃</button></form>
 <section><h2>검증 작업</h2><p>질문과 근거 확인 조건을 등록하고 진행 상태와 이력을 확인합니다. AI 실행기는 다음 단계에서 연결하므로 새 작업은 대기 상태로 유지됩니다.</p>
-<form id="task-form"><label for="task-question">검증할 질문</label><textarea id="task-question" required maxlength="2000"></textarea>
+<form id="task-form"><label for="task-question">검증할 질문</label><textarea id="task-question" required maxlength="${inputLimits.question}"></textarea>
 <label for="task-requirement">근거 확인 조건</label><select id="task-requirement"><option value="PRIMARY_REQUIRED">1차 출처 확인 필요</option><option value="CROSS_CHECK_REQUIRED">독립 출처 교차 확인 필요</option></select><button id="task-submit">작업 등록</button></form>
 <output id="task-message" aria-live="polite"></output><button id="task-refresh">목록 새로고침</button><p>최근 작업 최대 50개를 표시합니다.</p><ul id="task-list"></ul>
 <h3>작업 상세 · 변경 이력</h3><div id="task-summary" aria-live="polite">목록에서 작업을 선택하세요.</div>
 <button id="task-export" type="button" disabled>선택한 작업 JSON 내보내기</button>
 <h3>수동 근거 검토 기록 추가</h3><p>작업 선택 후 입력하세요. 저장 후 기존 기록을 수정하지 않습니다. 정정은 새 기록에 이유를 남기세요. URL은 참조 주소로만 보관하며 다운로드하거나 사실로 인증하지 않습니다. 개인정보·비밀번호·API 키는 입력하지 마세요.</p>
-<form id="note-form"><fieldset id="note-fields" disabled><label for="note-source">출처 HTTPS 주소 (쿼리·인증정보 제외)</label><input id="note-source" type="url" required maxlength="2048">
-<label for="note-original">원문 발췌 (최대 4,000자)</label><textarea id="note-original" required maxlength="4000"></textarea>
-<label for="note-interpretation">내 해석·판단 이유 / 정정 이유 (최대 4,000자)</label><textarea id="note-interpretation" required maxlength="4000"></textarea>
+<form id="note-form"><fieldset id="note-fields" disabled><label for="note-source">출처 HTTPS 주소 (쿼리·인증정보 제외)</label><input id="note-source" type="url" required maxlength="${inputLimits.sourceUrl}">
+<label for="note-original">원문 발췌 (최대 ${inputLimits.note}자)</label><textarea id="note-original" required maxlength="${inputLimits.note}"></textarea>
+<label for="note-interpretation">내 해석·판단 이유 / 정정 이유 (최대 ${inputLimits.note}자)</label><textarea id="note-interpretation" required maxlength="${inputLimits.note}"></textarea>
 <label for="note-stance">질문에 대한 수동 판단</label><select id="note-stance"><option value="UNVERIFIED">미확인 / 보류</option><option value="SUPPORTS">지지 근거로 판단</option><option value="CONTRADICTS">반박 근거로 판단</option></select><button id="note-submit">원문·해석 구분하여 기록</button></fieldset></form>
 <output id="note-message" aria-live="polite"></output><ul id="note-list"></ul>
 <details><summary>원본 JSON · 상태 변경 이력</summary><pre id="task-detail">목록에서 작업을 선택하세요.</pre></details></section>
 <section><h2>서비스 연결 확인</h2><button id="health">Java · Python · DB 확인</button><output id="health-result" aria-live="polite"></output></section>
-<section><h2>질문 저장 · 연결 점검</h2><p>질문은 PostgreSQL에 저장됩니다. 검증 실행이나 AI 응답 생성은 하지 않습니다.</p><form id="question-form"><label for="question">확인할 질문</label><textarea id="question" required maxlength="2000"></textarea><button>저장하고 연결 확인</button></form><output id="question-result" aria-live="polite"></output><ul id="checks"></ul></section>
+<section><h2>질문 저장 · 연결 점검</h2><p>질문은 PostgreSQL에 저장됩니다. 검증 실행이나 AI 응답 생성은 하지 않습니다.</p><form id="question-form"><label for="question">확인할 질문</label><textarea id="question" required maxlength="${inputLimits.question}"></textarea><button>저장하고 연결 확인</button></form><output id="question-result" aria-live="polite"></output><ul id="checks"></ul></section>
 <section><h2>7축 참조 계산기</h2><p>F 정확성 · S 공신력 · I 독립성 · T 시간 적합성 · C 일치성 · R 모순 위험 · E 전문가 검증</p><p>각 항목의 지지·반박·미확인 수량을 입력하세요. R은 모순 위험의 긍정·부정 판정 수량이며, 종합 계산에서 한 번 역변환합니다. 미검토 E는 null로 남깁니다.</p>
 <form id="evaluation-form"><label for="stage">검토 단계</label><select id="stage"><option value="provisional">전문가 검토 전 · E 제외</option><option value="reviewed">전문가 검토 후 · E 필요</option></select><label for="axes">항목별 판정 수량 (JSON)</label><textarea id="axes" rows="12" spellcheck="false"></textarea><button>계산 결과와 원본 입력 저장</button></form><output id="evaluation-error" aria-live="polite"></output><h3>계산 결과</h3><pre id="evaluation-result">아직 계산하지 않았습니다.</pre><p>표시 범위는 미확인 항목에 따른 산술 범위이며, 정답 확률이나 통계적 신뢰구간이 아닙니다.</p></section>
 <footer>원본 입력 · 계산 결과 · 정책 버전은 함께 보존됩니다. 외부 공개용 서비스가 아닙니다.</footer></main></body></html>

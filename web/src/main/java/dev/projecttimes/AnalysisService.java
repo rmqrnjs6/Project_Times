@@ -5,10 +5,15 @@ import java.time.Duration;
 
 @org.springframework.stereotype.Service
 public class AnalysisService {
-    private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
-    private final String base = System.getenv().getOrDefault("ANALYSIS_URL", "http://analysis:8000");
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
+    private final HttpClient client = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
+    private final String base;
+    public AnalysisService(@org.springframework.beans.factory.annotation.Value("${app.analysis.base-url}") String base) {
+        this.base = base;
+    }
     public HttpResponse<String> call(String path, String json) throws Exception {
-        var builder = HttpRequest.newBuilder(URI.create(base + path)).timeout(Duration.ofSeconds(5));
+        var builder = HttpRequest.newBuilder(URI.create(base + path)).timeout(REQUEST_TIMEOUT);
         if (json == null) builder.GET();
         else builder.header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(json));
         return client.send(builder.build(), HttpResponse.BodyHandlers.ofString());

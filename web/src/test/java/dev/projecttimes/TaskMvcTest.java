@@ -92,4 +92,27 @@ class TaskMvcTest {
             .andExpect(header().string("Cache-Control","no-store")).andExpect(jsonPath("$.schema_version").value("1"));
         verify(store).detail("alice",UUID.fromString(id));
     }
+
+    @Test void questionLimitAcceptsBoundaryAndRejectsOneExtraCharacter() throws Exception {
+        when(store.create(anyString(),anyString(),anyString())).thenReturn(UUID.fromString(id));
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        for(int length:List.of(2000,2001)) {
+            var body=mapper.writeValueAsString(Map.of("question","q".repeat(length),"evidenceRequirement","PRIMARY_REQUIRED"));
+            mvc.perform(post("/api/tasks").with(user("alice")).with(csrf()).contentType("application/json").content(body))
+                .andExpect(status().is(length==2000?201:400));
+        }
+        verify(store,times(1)).create(eq("alice"),anyString(),eq("PRIMARY_REQUIRED"));
+    }
+    @Test void noteAndUrlLimitsRetainOriginalBoundaries() throws Exception {
+        when(store.addNote(anyString(),any(),anyString(),anyString(),anyString(),anyString())).thenReturn(UUID.randomUUID());
+        String source="https://example.org/"+"a".repeat(2048-"https://example.org/".length());
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        var body=new HashMap<String,String>(Map.of("sourceUrl",source,"originalText","x".repeat(4000),"interpretation","y".repeat(4000),"stance","UNVERIFIED"));
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json").content(mapper.writeValueAsString(body))).andExpect(status().isCreated());
+        body.put("originalText","x".repeat(4001));
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json").content(mapper.writeValueAsString(body))).andExpect(status().isBadRequest());
+        body.put("originalText","x"); body.put("sourceUrl",source+"a");
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json").content(mapper.writeValueAsString(body))).andExpect(status().isBadRequest());
+        verify(store,times(1)).addNote(eq("alice"),any(),anyString(),anyString(),anyString(),anyString());
+    }
 }

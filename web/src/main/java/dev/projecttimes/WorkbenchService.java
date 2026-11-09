@@ -17,7 +17,7 @@ public class WorkbenchService {
     public void ready() throws Exception { database.ready(); analysis.ready(); }
     public Object checks(String owner) throws Exception { return database.checks(owner); }
     public Object saveCheck(String owner, String question) throws Exception {
-        if (question == null || question.isBlank() || question.length()>2000) throw new RequestFailure(400,"invalid_question");
+        if (question == null || question.isBlank() || question.length()>InputLimits.QUESTION_CHARS) throw new RequestFailure(400,"invalid_question");
         analysis.ready();
         return Map.of("id",database.saveCheck(owner,question.strip()).toString(),"kind","connectivity_only","analysis","ok");
     }

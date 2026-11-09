@@ -1,0 +1,50 @@
+refactor-baseline-tests.log SHA256 a3e8c5eefc564c0243ebfa5ae0f61cb9d785de2c2a3bb9e212758e8ce9854877
+refactor-red.log SHA256 26ce2925e8b76b9f0634f4c4255beb53729b690fe04baad0677386c8ad0d37c3
+refactor-green.log SHA256 2aab1a2b245b8826b1c0d417aedcdb6503a80408013ecda612bfd7c223879882
+refactor-database.log SHA256 d9b82352e72ea86ead3a104b5de989634e5d40959f9129df98b0564fb5c0b19c
+refactor-http.log SHA256 a426a4cec4b364d9ea714590f99347d444c6af54554b0973fe5bd7e418f2c9af
+TEST-dev.projecttimes.AnalysisServiceTest.xml SHA256 91faa8176d820bff93c5ad207ab4aa54ed0df0a0b3059c4394c7eee56083077f
+TEST-dev.projecttimes.AuthBootstrapTest.xml SHA256 9d5a235ede3e1b4ee32b3c8bb6ed658be75d0d46a2ea412c77ed2a00d72bce93
+TEST-dev.projecttimes.ExternalMaterialPolicyTest.xml SHA256 a48c03072d0194ce63fd7419c8ff13de8fc8bf4a84c93568bd6d69f300828d4f
+TEST-dev.projecttimes.ProductionTransportTest.xml SHA256 917ad014f70ea10a339e681dfbe4ed695147a9371d94e34fa019c70f1252f713
+TEST-dev.projecttimes.SecurityMvcTest.xml SHA256 b5e75847fee7aadb82586d865ac6ef2203b3c4c6b0fd02ffbff768c931becb0b
+TEST-dev.projecttimes.TaskMvcTest.xml SHA256 d70528f88281a0faf6fd8105dfa4ffb0f864cfcb27a2ccbe342f76d344e35264
+TEST-dev.projecttimes.TaskStoreTest.xml SHA256 934533f8b1b37e9ecad94c1c32dd0ee24ddb1eea68e1beceb973fb409633e3ce
+
+PASS browser form origin preserved by referrer policy
+PASS anonymous API access denied
+PASS session cookie is HttpOnly and SameSite Strict
+PASS real database-backed login succeeds
+PASS session identifier rotated at login
+PASS pre-login CSRF token rejected after authentication
+PASS JSP renders Korean workbench
+PASS JSP input limits render from shared server policy
+PASS security headers
+PASS Java -> Python and PostgreSQL readiness
+PASS question persistence returns ID
+PASS stored UTF-8 question can be read
+PASS empty question rejected
+PASS form submissions rejected
+PASS cross-origin writes rejected
+PASS evaluation is persisted with run ID
+PASS unknown retained and expert unreviewed
+PASS reference policy recorded
+PASS reviewed composite missing without expert
+PASS invalid counts rejected through Java
+PASS request size bounded
+PASS external intake denied by default empty allowlist
+PASS task created queued with location
+PASS task input and creation event persisted
+PASS created task appears in owner list
+PASS stale task version rejected
+PASS queued task cancellation succeeds
+PASS cancellation and event persisted
+PASS terminal task cannot be changed
+PASS invalid evidence condition rejected
+PASS manual note stored as untrusted reference without fetch
+PASS original and interpretation preserved separately
+PASS private export includes note snapshot
+PASS sensitive query source rejected
+PASS logout succeeds with CSRF
+PASS logged-out session cannot read data
+Integration complete. Authentication tested with actual DB; factual judgments and production deployment remain outside scope.

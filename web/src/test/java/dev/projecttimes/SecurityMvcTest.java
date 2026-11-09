@@ -142,4 +142,9 @@ class SecurityMvcTest {
             .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("quarantined")).andExpect(jsonPath("$.trusted").value(false)).andExpect(jsonPath("$.fetched").value(false));
         verifyNoInteractions(analysis);
     }
+
+    @Test void authenticatedViewReceivesServerInputLimits() throws Exception {
+        mvc.perform(get("/").with(user("alice"))).andExpect(status().isOk()).andExpect(view().name("index"))
+            .andExpect(model().attribute("inputLimits",Map.of("question",2000,"note",4000,"sourceUrl",2048)));
+    }
 }

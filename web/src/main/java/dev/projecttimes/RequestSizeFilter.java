@@ -11,10 +11,10 @@ public class RequestSizeFilter extends OncePerRequestFilter {
         if (unsafe && origin!=null && !origin.equals(request.getScheme()+"://"+request.getHeader("Host"))) {
             response.setStatus(403); response.setContentType("application/json"); response.getWriter().write("{\"error\":\"cross_origin_rejected\"}"); return;
         }
-        if (request.getContentLengthLong()>32768) { reject(response); return; }
+        if (request.getContentLengthLong()>InputLimits.REQUEST_BODY_BYTES) { reject(response); return; }
         if (request.getRequestURI().startsWith(request.getContextPath()+"/api/") && request.getMethod().equals("POST")) {
-            byte[] body=request.getInputStream().readNBytes(32769);
-            if (body.length>32768) { reject(response); return; }
+            byte[] body=request.getInputStream().readNBytes(InputLimits.REQUEST_BODY_BYTES + 1);
+            if (body.length>InputLimits.REQUEST_BODY_BYTES) { reject(response); return; }
             chain.doFilter(new HttpServletRequestWrapper(request) {
                 @Override public ServletInputStream getInputStream() {
                     var stream=new ByteArrayInputStream(body);

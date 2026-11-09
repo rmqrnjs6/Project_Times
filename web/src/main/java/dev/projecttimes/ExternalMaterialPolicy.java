@@ -15,10 +15,10 @@ public class ExternalMaterialPolicy {
     }
     public record Accepted(String source,String sha256) {}
     public Accepted inspect(String source,String content,String mediaType) {
-        if (!"text/plain".equals(mediaType) || content==null || content.isBlank() || content.getBytes(StandardCharsets.UTF_8).length>20000 || content.indexOf('\0')>=0)
+        if (!"text/plain".equals(mediaType) || content==null || content.isBlank() || content.getBytes(StandardCharsets.UTF_8).length>InputLimits.PLAIN_TEXT_BYTES || content.indexOf('\0')>=0)
             throw new RequestFailure(400,"invalid_plain_text");
         try {
-            if (source==null || source.length()>2048) throw new IllegalArgumentException();
+            if (source==null || source.length()>InputLimits.SOURCE_URL_CHARS) throw new IllegalArgumentException();
             URI uri=new URI(source);
             String host=uri.getHost();
             if (!"https".equals(uri.getScheme()) || host==null || uri.getRawUserInfo()!=null || uri.getRawQuery()!=null || uri.getRawFragment()!=null || (uri.getPort()!=-1 && uri.getPort()!=443)) throw new IllegalArgumentException();

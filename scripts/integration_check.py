@@ -2,6 +2,7 @@
 Synthetic inputs only. No paid API calls. Persists diagnostic/calculation rows.
 """
 import json
+import re
 import os
 from http.cookiejar import CookieJar
 from urllib.parse import urlencode
@@ -60,6 +61,7 @@ check('pre-login CSRF token rejected after authentication', status == 403)
 csrf_token = new_token
 status, body, headers = call('/')
 check('JSP renders Korean workbench', status == 200 and '검증 작업대' in body and '<%@' not in body)
+check('JSP input limits render from shared server policy', all(re.search(r'id="'+field+r'"[^>]*maxlength="'+limit+r'"',body) for field,limit in [('task-question','2000'),('question','2000'),('note-original','4000'),('note-interpretation','4000'),('note-source','2048')]))
 check('security headers', headers['X-Content-Type-Options'] == 'nosniff' and "frame-ancestors 'none'" in headers['Content-Security-Policy'])
 status, body, _ = call('/ready')
 check('Java -> Python and PostgreSQL readiness', status == 200 and json.loads(body)['status'] == 'ok')

@@ -145,6 +145,6 @@ class SecurityMvcTest {
 
     @Test void authenticatedViewReceivesServerInputLimits() throws Exception {
         mvc.perform(get("/").with(user("alice"))).andExpect(status().isOk()).andExpect(view().name("index"))
-            .andExpect(model().attribute("inputLimits",Map.of("question",2000,"note",4000,"sourceUrl",2048)));
+            .andExpect(model().attribute("inputLimits",Map.of("question",2000,"note",4000,"sourceUrl",2048,"search",200)));
     }
 }

@@ -35,6 +35,10 @@ const taskStatus = {QUEUED:'대기', RUNNING:'실행 중', SUCCEEDED:'완료', F
 let selectedTask = null;
 let taskSelectionRequest = 0;
 let noteSaving = false;
+let taskPage = 0;
+let taskQuery = '';
+let taskHasNext = false;
+let taskListRequest = 0;
 async function showTask(id) {
   const sequence = ++taskSelectionRequest;
   const row = await request('/api/tasks/' + encodeURIComponent(id));
@@ -54,36 +58,53 @@ async function showTask(id) {
     return li;
   }));
 }
-async function tasks() {
-  const rows = await request('/api/tasks');
-  byId('task-list').replaceChildren(...rows.map(row => {
-    const li = document.createElement('li');
-    const view = document.createElement('button');
-    view.type = 'button';
-    view.textContent = row.question + ' · ' + (taskStatus[row.status] || row.status);
-    view.onclick = () => showTask(row.id).catch(error => {byId('task-message').textContent = error.message;});
-    li.append(view);
-    if (['QUEUED', 'RUNNING'].includes(row.status)) {
-      const cancel = document.createElement('button');
-      cancel.type = 'button'; cancel.textContent = '취소';
-      cancel.onclick = async () => {
-        cancel.disabled = true;
-        try {
-          await request('/api/tasks/' + encodeURIComponent(row.id) + '/cancel', {version: row.version});
-          byId('task-message').textContent = '작업을 취소했습니다.';
-          await tasks();
-          await showTask(row.id);
-        } catch (error) {
-          byId('task-message').textContent = error.message + ' · 새로고침 후 현재 상태를 확인하세요.';
-          cancel.disabled = false;
-        }
-      };
-      li.append(cancel);
+async function tasks(page = taskPage, query = taskQuery) {
+  const sequence = ++taskListRequest;
+  byId('task-prev').disabled = true; byId('task-next').disabled = true;
+  try {
+    const result = await request('/api/tasks/page?' + new URLSearchParams({q: query, page, size: 20}));
+    if (sequence !== taskListRequest) return;
+    const rows = result.items;
+    byId('task-message').textContent = '';
+    taskPage = result.page; taskQuery = query; taskHasNext = result.hasNext;
+    byId('task-page-info').textContent = `검색 결과 ${result.total}건 · ${taskPage + 1}페이지`;
+
+    byId('task-list').replaceChildren(...rows.map(row => {
+      const li = document.createElement('li');
+      const view = document.createElement('button');
+      view.type = 'button';
+      view.textContent = row.question + ' · ' + (taskStatus[row.status] || row.status);
+      view.onclick = () => showTask(row.id).catch(error => {byId('task-message').textContent = error.message;});
+      li.append(view);
+      if (['QUEUED', 'RUNNING'].includes(row.status)) {
+        const cancel = document.createElement('button');
+        cancel.type = 'button'; cancel.textContent = '취소';
+        cancel.onclick = async () => {
+          cancel.disabled = true;
+          try {
+            await request('/api/tasks/' + encodeURIComponent(row.id) + '/cancel', {version: row.version});
+            byId('task-message').textContent = '작업을 취소했습니다.';
+            await tasks();
+            await showTask(row.id);
+          } catch (error) {
+            byId('task-message').textContent = error.message + ' · 새로고침 후 현재 상태를 확인하세요.';
+            cancel.disabled = false;
+          }
+        };
+        li.append(cancel);
+      }
+      return li;
+    }));
+    if (rows.length === 0) {
+      const li = document.createElement('li'); li.textContent = query ? '검색 조건에 맞는 작업이 없습니다.' : '등록된 작업이 없습니다.'; byId('task-list').append(li);
     }
-    return li;
-  }));
-  if (rows.length === 0) {
-    const li = document.createElement('li'); li.textContent = '등록된 작업이 없습니다.'; byId('task-list').append(li);
+  } catch (error) {
+    if (sequence === taskListRequest) throw error;
+  } finally {
+    if (sequence === taskListRequest) {
+      byId('task-prev').disabled = taskPage === 0;
+      byId('task-next').disabled = !taskHasNext;
+    }
   }
 }
 byId('task-form').onsubmit = async event => {
@@ -91,12 +112,33 @@ byId('task-form').onsubmit = async event => {
   try {
     const row = await request('/api/tasks', {question: byId('task-question').value, evidenceRequirement: byId('task-requirement').value});
     byId('task-message').textContent = '등록 완료 · AI 실행기 연결 전까지 대기합니다.';
-    await tasks(); await showTask(row.id);
+    byId('task-search').value = '';
+    await tasks(0, ''); await showTask(row.id);
   } catch (error) {byId('task-message').textContent = error.message;}
   finally {byId('task-submit').disabled = false;}
 };
 byId('task-refresh').onclick = async () => {
   try {await tasks(); if (selectedTask) await showTask(selectedTask);}
+  catch (error) {byId('task-message').textContent = error.message;}
+};
+byId('task-search-form').onsubmit = async event => {
+  event.preventDefault();
+  try {await tasks(0, byId('task-search').value.trim());}
+  catch (error) {byId('task-message').textContent = error.message;}
+};
+byId('task-search-clear').onclick = async () => {
+  byId('task-search').value = '';
+  try {await tasks(0, '');}
+  catch (error) {byId('task-message').textContent = error.message;}
+};
+byId('task-prev').onclick = async () => {
+  if (taskPage === 0) return;
+  try {await tasks(taskPage - 1);}
+  catch (error) {byId('task-message').textContent = error.message;}
+};
+byId('task-next').onclick = async () => {
+  if (!taskHasNext) return;
+  try {await tasks(taskPage + 1);}
   catch (error) {byId('task-message').textContent = error.message;}
 };
 tasks().catch(error => {byId('task-message').textContent = error.message;});

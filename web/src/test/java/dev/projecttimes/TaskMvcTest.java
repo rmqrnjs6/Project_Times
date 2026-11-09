@@ -133,4 +133,20 @@ class TaskMvcTest {
         mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).header("Idempotency-Key",key.toString()).contentType("application/json").content(body))
             .andExpect(status().isConflict()).andExpect(content().json("{\"error\":\"idempotency_key_conflict\"}"));
     }
+
+    @Test void pageDefaultsAndSearchUseSessionOwner() throws Exception {
+        when(store.page("alice","topic",0,20)).thenReturn(new TaskStore.Page(List.of(),0,20,0,false));
+        mvc.perform(get("/api/tasks/page").param("q"," topic ").param("owner","bob").with(user("alice")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items").isArray()).andExpect(jsonPath("$.total").value(0));
+        verify(store).page("alice","topic",0,20);
+    }
+    @Test void invalidSearchParametersAreRejectedBeforeStorage() throws Exception {
+        for(String query:List.of("page=-1","page=abc","page=2147483648","size=0","size=51","size=abc"))
+            mvc.perform(get("/api/tasks/page?"+query).with(user("alice"))).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/tasks/page").param("q","q".repeat(201)).with(user("alice"))).andExpect(status().isBadRequest());
+        verifyNoInteractions(store);
+    }
+    @Test void anonymousCannotReadPagedResultsOrCounts() throws Exception {
+        mvc.perform(get("/api/tasks/page?q=topic")).andExpect(status().isUnauthorized()); verifyNoInteractions(store);
+    }
 }

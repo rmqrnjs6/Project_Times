@@ -31,6 +31,10 @@ public class TaskController {
         var id=tasks.create(owner.getName(),input.question(),input.evidenceRequirement());
         return ResponseEntity.created(URI.create("/api/tasks/"+id)).body(Map.of("id",id,"status","QUEUED","version",0));
     }
+    @GetMapping("/page") public Object page(Principal owner,@RequestParam(defaultValue="") String q,
+        @RequestParam(defaultValue="0") String page,@RequestParam(defaultValue="20") String size) throws Exception {
+        return tasks.search(owner.getName(),q,page,size);
+    }
     @GetMapping public Object list(Principal owner) throws Exception { return tasks.list(owner.getName()); }
     @GetMapping("/{id}") public Object detail(Principal owner,@PathVariable String id) throws Exception { return tasks.detail(owner.getName(),id); }
     @PostMapping(value="/{id}/cancel",consumes=MediaType.APPLICATION_JSON_VALUE)

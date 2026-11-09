@@ -1,0 +1,66 @@
+task-search-baseline.log SHA256 2c849296f6fb325c687acfe8fd3f1bf8328d04b672b66af8b13719a3a143ec41
+task-search-red.log SHA256 3bc2557be20ef0f8adafef5add7dcc380a439e1392bb3ed0352555feaef0de89
+task-search-build-failure.log SHA256 40853b5cb768a92298368ff3efbe8ad198ddf0602ba2389f8d0481fb245ecb3e
+task-search-build-final.log SHA256 df0ffb98715ebec78a26024a6fb48a52011454ac66c7d6b3f2afe70079349ef7
+task-search-ui-red.log SHA256 5f49d2f04c3766268e1892f99ed51741460c029dc482bd17e1e945f20e71d9c7
+task-search-ui-green.log SHA256 1c32a0dce449126993943aaac3567f4d0be6ea9f382a48349f8a2d7fedfcb29b
+task-search-database.log SHA256 75f143199f933c1437594f189b2b9f4e979149035fcfc9f625eaaabe04ab1f81
+task-search-http.log SHA256 b51290123972435fec6556946356f0520b114d68a4e124dd1822453c6e6066a2
+task-search-python.log SHA256 ad072e6e23340faf2f25590cc02798ab58396c3e878be267d89b83dd5b6226bd
+TEST-dev.projecttimes.AnalysisServiceTest.xml SHA256 9e5500d31ab98d5634929066844e7310db37498605d9d1abcc90a8eebff68daf
+TEST-dev.projecttimes.AuthBootstrapTest.xml SHA256 6887a6d9e5648a2dda992cadd095936a1aa387f603c86e471b6421e992121752
+TEST-dev.projecttimes.ExternalMaterialPolicyTest.xml SHA256 b9303267f7597fedb76ded319ff818150510d8c0c80cb7b8e8bf4dc48d9b2258
+TEST-dev.projecttimes.ProductionTransportTest.xml SHA256 4731976c974a0a26df01c63f3e48a6ee8a1832ae2ff934a77981c32c87cb5b8f
+TEST-dev.projecttimes.SecurityMvcTest.xml SHA256 808dfc09c1b8374f8e10a6bb054f030ce89c38d682721b9bfc682a8dd36384ed
+TEST-dev.projecttimes.TaskMvcTest.xml SHA256 0369ae1a232ecec07c4dd2bbda8c595a32f0e22f8b68ee779535c0849f932ac0
+TEST-dev.projecttimes.TaskStoreTest.xml SHA256 189baabdd683dfed5a1046d5479b342ecace798f2bc83d6914e195d0d1353934
+
+PASS browser form origin preserved by referrer policy
+PASS anonymous API access denied
+PASS session cookie is HttpOnly and SameSite Strict
+PASS real database-backed login succeeds
+PASS session identifier rotated at login
+PASS pre-login CSRF token rejected after authentication
+PASS JSP renders Korean workbench
+PASS JSP input limits render from shared server policy
+PASS security headers
+PASS Java -> Python and PostgreSQL readiness
+PASS question persistence returns ID
+PASS stored UTF-8 question can be read
+PASS empty question rejected
+PASS form submissions rejected
+PASS cross-origin writes rejected
+PASS evaluation is persisted with run ID
+PASS unknown retained and expert unreviewed
+PASS reference policy recorded
+PASS reviewed composite missing without expert
+PASS invalid counts rejected through Java
+PASS request size bounded
+PASS external intake denied by default empty allowlist
+PASS task created queued with location
+PASS task input and creation event persisted
+PASS created task appears in owner list
+PASS stale task version rejected
+PASS queued task cancellation succeeds
+PASS cancellation and event persisted
+PASS terminal task cannot be changed
+PASS invalid evidence condition rejected
+PASS manual note stored as untrusted reference without fetch
+PASS original and interpretation preserved separately
+PASS private export includes note snapshot
+PASS sensitive query source rejected
+PASS same request key returns the original note
+PASS same key with different content rejected
+PASS new key preserves intentional repeated content
+PASS replay and conflict appended no extra note
+PASS invalid request key rejected
+PASS search is case insensitive with exact owner result count
+PASS second search page has no repeated IDs
+PASS last search page disables continuation
+PASS out of range page is empty with original count
+PASS percent and underscore are literal search characters
+PASS SQL-like text does not expose other results
+PASS oversized page request rejected
+PASS logout succeeds with CSRF
+PASS logged-out session cannot read data
+Integration complete. Authentication tested with actual DB; factual judgments and production deployment remain outside scope.

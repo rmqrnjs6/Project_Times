@@ -160,4 +160,35 @@ class TaskStoreTest {
         }
         assertEquals(1,((List<?>)store.detail("task-alice",task).get("notes")).size());
     }
+
+    @Test void searchPagesFindOlderTasksWithoutLeakingAnotherOwnersCount() throws Exception {
+        String term="search-"+UUID.randomUUID();
+        for(int index=0;index<53;index++) store.create("task-alice",term+" item "+index,"PRIMARY_REQUIRED");
+        store.create("task-bob",term+" private","PRIMARY_REQUIRED");
+        var first=store.page("task-alice",term.toUpperCase(Locale.ROOT),0,20);
+        var second=store.page("task-alice",term,1,20); var third=store.page("task-alice",term,2,20);
+        assertEquals(53,first.total()); assertEquals(20,first.items().size());assertTrue(first.hasNext());
+        assertEquals(20,second.items().size()); assertTrue(second.hasNext()); assertEquals(13,third.items().size()); assertFalse(third.hasNext());
+        var ids=new HashSet<Object>();
+        for(var page:List.of(first,second,third)) for(var row:page.items()) assertTrue(ids.add(row.get("id")));
+        assertEquals(53,ids.size()); assertTrue(store.page("task-alice",term,3,20).items().isEmpty());
+        assertEquals(1,store.page("task-bob",term,0,20).total());
+    }
+    @Test void searchTreatsSqlWildcardsAndQuotesAsLiteralText() throws Exception {
+        String term="literal-"+UUID.randomUUID();
+        store.create("task-alice",term+" 100%_value O'Reilly","PRIMARY_REQUIRED");
+        store.create("task-alice",term+" ordinary","PRIMARY_REQUIRED");
+        assertEquals(1,store.page("task-alice","100%_value O'Reilly",0,20).total());
+        assertEquals(0,store.page("task-alice","' OR 1=1 --",0,20).total());
+    }
+    @Test void sameTimestampUsesIdTieBreakForStablePages() throws Exception {
+        String term="tie-"+UUID.randomUUID();
+        var a=store.create("task-alice",term,"PRIMARY_REQUIRED");var b=store.create("task-alice",term,"PRIMARY_REQUIRED");
+        try(var c=source.getConnection();var s=c.prepareStatement("UPDATE verification_tasks SET created_at='2026-01-01 00:00:00+00' WHERE id IN (?,?)")) {
+            s.setObject(1,a);s.setObject(2,b);s.executeUpdate();
+        }
+        var expected=new ArrayList<>(List.of(a.toString(),b.toString()));Collections.sort(expected);
+        assertEquals(expected.get(0),store.page("task-alice",term,0,1).items().get(0).get("id"));
+        assertEquals(expected.get(1),store.page("task-alice",term,1,1).items().get(0).get("id"));
+    }
 }

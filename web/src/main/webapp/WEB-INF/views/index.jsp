@@ -6,7 +6,9 @@
 <section><h2>검증 작업</h2><p>질문과 근거 확인 조건을 등록하고 진행 상태와 이력을 확인합니다. AI 실행기는 다음 단계에서 연결하므로 새 작업은 대기 상태로 유지됩니다.</p>
 <form id="task-form"><label for="task-question">검증할 질문</label><textarea id="task-question" required maxlength="${inputLimits.question}"></textarea>
 <label for="task-requirement">근거 확인 조건</label><select id="task-requirement"><option value="PRIMARY_REQUIRED">1차 출처 확인 필요</option><option value="CROSS_CHECK_REQUIRED">독립 출처 교차 확인 필요</option></select><button id="task-submit">작업 등록</button></form>
-<output id="task-message" aria-live="polite"></output><button id="task-refresh">목록 새로고침</button><p>최근 작업 최대 50개를 표시합니다.</p><ul id="task-list"></ul>
+<form id="task-search-form"><label for="task-search">질문 내용 검색</label><input id="task-search" type="search" maxlength="${inputLimits.search}" placeholder="검색어를 입력하세요"><button type="submit">검색</button><button id="task-search-clear" type="button">검색 초기화</button></form>
+<output id="task-message" aria-live="polite"></output><button id="task-refresh" type="button">목록 새로고침</button>
+<output id="task-page-info" aria-live="polite"></output><button id="task-prev" type="button" disabled>이전 페이지</button><button id="task-next" type="button" disabled>다음 페이지</button><ul id="task-list"></ul>
 <h3>작업 상세 · 변경 이력</h3><div id="task-summary" aria-live="polite">목록에서 작업을 선택하세요.</div>
 <button id="task-export" type="button" disabled>선택한 작업 JSON 내보내기</button>
 <h3>수동 근거 검토 기록 추가</h3><p>작업 선택 후 입력하세요. 저장 후 기존 기록을 수정하지 않습니다. 정정은 새 기록에 이유를 남기세요. URL은 참조 주소로만 보관하며 다운로드하거나 사실로 인증하지 않습니다. 개인정보·비밀번호·API 키는 입력하지 마세요.</p>

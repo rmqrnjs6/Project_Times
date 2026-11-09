@@ -38,6 +38,17 @@ public class TaskService {
         try { var id=UUID.fromString(value); if(!id.toString().equalsIgnoreCase(value)) throw new IllegalArgumentException(); return id; }
         catch(IllegalArgumentException e) { throw new RequestFailure(400,"invalid_task_id"); }
     }
+    public TaskStore.Page search(String owner,String query,String page,String size) throws Exception {
+        String term=query==null?"":query.strip();
+        if(term.length()>InputLimits.SEARCH_QUERY_CHARS) throw new RequestFailure(400,"invalid_task_search");
+        int index,limit;
+        try {
+            index=Integer.parseInt(page); limit=Integer.parseInt(size);
+            if(index<0 || limit<1 || limit>50) throw new NumberFormatException();
+        } catch(NumberFormatException e) { throw new RequestFailure(400,"invalid_task_page"); }
+        store.recoverExpired(owner);
+        return store.page(owner,term,index,limit);
+    }
     public Object list(String owner) throws Exception { store.recoverExpired(owner); return store.list(owner); }
     public Object detail(String owner,String value) throws Exception { UUID id=id(value); store.recoverExpired(owner); return store.detail(owner,id); }
     public void cancel(String owner,String value,Long version) throws Exception {

@@ -51,6 +51,26 @@ public class TaskStore {
         }
         return rows;
     }
+    public record Page(List<Map<String,Object>> items,int page,int size,long total,boolean hasNext) {}
+    private static final String SEARCH_FILTER = " WHERE owner_key=? AND POSITION(LOWER(?) IN LOWER(question))>0";
+    public Page page(String owner,String query,int page,int size) throws Exception {
+        return transaction(c -> {
+            // COUNT and rows must describe the same snapshot, even if a task is added concurrently.
+            c.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+            long total;
+            try(var s=c.prepareStatement("SELECT count(*) FROM verification_tasks"+SEARCH_FILTER)) {
+                s.setString(1,owner); s.setString(2,query);
+                try(var r=s.executeQuery()) { r.next(); total=r.getLong(1); }
+            }
+            long offset=(long)page*size;
+            var rows=new ArrayList<Map<String,Object>>();
+            try(var s=c.prepareStatement("SELECT * FROM verification_tasks"+SEARCH_FILTER+" ORDER BY created_at DESC,id LIMIT ? OFFSET ?")) {
+                s.setString(1,owner); s.setString(2,query); s.setInt(3,size); s.setLong(4,offset);
+                try(var r=s.executeQuery()) { while(r.next()) rows.add(row(r)); }
+            }
+            return new Page(rows,page,size,total,offset+rows.size()<total);
+        });
+    }
     public Map<String,Object> detail(String owner,UUID id) throws Exception {
         return transaction(c -> {
             // Hold a shared lock so task and event snapshots cannot straddle a concurrent transition.

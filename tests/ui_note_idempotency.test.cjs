@@ -1,41 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-const {webcrypto, randomUUID} = require('node:crypto');
-const source = fs.readFileSync('web/src/main/resources/static/workbench.js', 'utf8');
-const task = '812cba03-a324-4df3-9808-e7fc1e257332';
-const example = {sourceUrl:'https://example.org/source', originalText:'synthetic original only', interpretation:'synthetic interpretation only', stance:'UNVERIFIED'};
-function harness(storage = new Map(), post = async () => {}) {
-  const elements = new Map();
-  const element = id => {
-    if (!elements.has(id)) elements.set(id, {value:'', textContent:'', disabled:false, replaceChildren(){}, append(){}});
-    return elements.get(id);
-  };
-  const calls=[];
-  element('note-form').reset = () => fill({sourceUrl:'',originalText:'',interpretation:'',stance:'UNVERIFIED'});
-  function fill(payload=example) {
-    for (const [key,id] of Object.entries({sourceUrl:'note-source',originalText:'note-original',interpretation:'note-interpretation',stance:'note-stance'})) element(id).value=payload[key];
-  }
-  const context = vm.createContext({TextEncoder, Uint8Array, crypto:{subtle:webcrypto.subtle,randomUUID},
-    sessionStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)},
-    document:{getElementById:element,querySelector:()=>({content:'synthetic-csrf'}),createElement:()=>({append(){}})},
-    window:{location:{assign(){}}},
-    fetch:async (path, options={}) => {
-      if (path.endsWith('/notes')) {
-        calls.push({key:options.headers['Idempotency-Key'],payload:JSON.parse(options.body)});
-        await post(calls.length);
-        return {status:201,ok:true,json:async()=>({id:'synthetic-note'})};
-      }
-      const data = path==='/api/tasks' || path==='/api/checks' ? [] : {id:task,question:'synthetic',status:'QUEUED',version:0,notes:[]};
-      return {status:200,ok:true,json:async()=>data};
-    }
-  });
-  vm.runInContext(source,context);
-  return {storage,calls,element,fill,
-    select:()=>vm.runInContext(`showTask('${task}')`,context),
-    submit:()=>element('note-form').onsubmit({preventDefault(){}})};
-}
+const {harness,task,example}=require('./helpers/workbench-harness.cjs');
 test('lost response retries the same key; accepted intentional repetition gets a new key', async () => {
   const h=harness(new Map(),async count=>{if(count===1) throw Error('synthetic lost reply');});
   await h.select();h.fill();await h.submit();

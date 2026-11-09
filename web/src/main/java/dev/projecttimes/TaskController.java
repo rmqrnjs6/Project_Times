@@ -15,8 +15,8 @@ public class TaskController {
     public record CancelTask(Long version) {}
     public record NewNote(String sourceUrl,String originalText,String interpretation,String stance) {}
     @PostMapping(value="/{id}/notes",consumes=MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> note(Principal owner,@PathVariable String id,@RequestBody NewNote input) throws Exception {
-        var note=tasks.note(owner.getName(),id,input.sourceUrl(),input.originalText(),input.interpretation(),input.stance());
+    public ResponseEntity<?> note(Principal owner,@PathVariable String id,@RequestBody NewNote input,@RequestHeader(value="Idempotency-Key",required=false) String requestKey) throws Exception {
+        var note=tasks.note(owner.getName(),id,input.sourceUrl(),input.originalText(),input.interpretation(),input.stance(),requestKey);
         return ResponseEntity.status(201).body(Map.of("id",note,"kind","manual_review","trusted",false,"fetched",false));
     }
     @GetMapping(value="/{id}/export",produces=MediaType.APPLICATION_JSON_VALUE)

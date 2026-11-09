@@ -84,15 +84,29 @@ public class TaskStore {
     }
     /** Append only: no HTTP update/delete route. Owner check and insert share a transaction. */
     public UUID addNote(String owner,UUID task,String sourceUrl,String original,String interpretation,String stance) throws Exception {
+        return addNote(owner,task,sourceUrl,original,interpretation,stance,null);
+    }
+    public UUID addNote(String owner,UUID task,String sourceUrl,String original,String interpretation,String stance,UUID requestId) throws Exception {
         return transaction(c -> {
             try(var s=c.prepareStatement("SELECT id FROM verification_tasks WHERE id=? AND owner_key=? FOR UPDATE")) {
                 s.setObject(1,task); s.setString(2,owner);
                 try(var r=s.executeQuery()) { if(!r.next()) throw new RequestFailure(404,"task_not_found"); }
             }
+            if(requestId!=null) {
+                try(var s=c.prepareStatement("SELECT id,source_url,original_text,interpretation,stance FROM verification_notes WHERE task_id=? AND request_id=?")) {
+                    s.setObject(1,task); s.setObject(2,requestId);
+                    try(var r=s.executeQuery()) { if(r.next()) {
+                        boolean same=Objects.equals(sourceUrl,r.getString("source_url")) && Objects.equals(original,r.getString("original_text"))
+                            && Objects.equals(interpretation,r.getString("interpretation")) && Objects.equals(stance,r.getString("stance"));
+                        if(!same) throw new RequestFailure(409,"idempotency_key_conflict");
+                        return r.getObject("id",UUID.class);
+                    }}
+                }
+            }
             var id=UUID.randomUUID();
-            try(var s=c.prepareStatement("INSERT INTO verification_notes(id,task_id,author,source_url,original_text,interpretation,stance) VALUES (?,?,?,?,?,?,?)")) {
+            try(var s=c.prepareStatement("INSERT INTO verification_notes(id,task_id,author,source_url,original_text,interpretation,stance,request_id) VALUES (?,?,?,?,?,?,?,?)")) {
                 s.setObject(1,id); s.setObject(2,task); s.setString(3,owner); s.setString(4,sourceUrl);
-                s.setString(5,original); s.setString(6,interpretation); s.setString(7,stance); s.executeUpdate();
+                s.setString(5,original); s.setString(6,interpretation); s.setString(7,stance); s.setObject(8,requestId); s.executeUpdate();
             }
             return id;
         });

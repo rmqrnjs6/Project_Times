@@ -1,0 +1,82 @@
+note-idempotency-red.log SHA256 3a1783bc091582e1d9a0fd34a7b00de6b60431315bf655b64b0e2d458ba1b916
+note-idempotency-build.log SHA256 ad84617c10f0b93d67ed0fb381c8404f69b3cd26f5bd14b2992498af9f2d52d9
+note-idempotency-ui.log SHA256 27c2c0142e15a315345988fab2ccea5eaf3e9bf798244337b3180948fe3ae7c6
+note-idempotency-database.log SHA256 4103a7ca37fd1379df3f54941cd32791a240ec785ffbfd2f0a073d352d015b80
+note-idempotency-http.log SHA256 6c21b7a8f4cb7e47a0c3b51f04c0e148aafae19050ca4118bdfc3c7d027115b3
+note-idempotency-restart.log SHA256 6c6f5f74c5b1681942528b6dd4497f2599e6424d9d9efc3797915061b3257b05
+TEST-dev.projecttimes.AnalysisServiceTest.xml SHA256 77e6d7f46e4ae33e2c84da3cda8a8556b992728626ce400b2ecad9c39665d18f
+TEST-dev.projecttimes.AuthBootstrapTest.xml SHA256 47f8b4bbe60e4386a16c88d372974219ef0c7ea7d9a8b0795f6754cbc463a728
+TEST-dev.projecttimes.ExternalMaterialPolicyTest.xml SHA256 6fd20f606ba8e65bbb0a0a9b29c2c7be270153abb9e3dd4cdfe243b66965ffec
+TEST-dev.projecttimes.ProductionTransportTest.xml SHA256 1b21027970cd8f876df0f05646c06a8e783fd064e9408bfbb547ed63e5ef017d
+TEST-dev.projecttimes.SecurityMvcTest.xml SHA256 4eab5dd174c80964861d06ba824608425fa902f2567513fceb4a8184c4919918
+TEST-dev.projecttimes.TaskMvcTest.xml SHA256 94de4f925685c35be0effa674f9c2ec3992c12c808479d9ebe3eee941d3dee89
+TEST-dev.projecttimes.TaskStoreTest.xml SHA256 7ccb8172789d999a235b848dce7e8a28728cd710739dafd307dea24e58d48dc4
+
+PASS browser form origin preserved by referrer policy
+PASS anonymous API access denied
+PASS session cookie is HttpOnly and SameSite Strict
+PASS real database-backed login succeeds
+PASS session identifier rotated at login
+PASS pre-login CSRF token rejected after authentication
+PASS JSP renders Korean workbench
+PASS JSP input limits render from shared server policy
+PASS security headers
+PASS Java -> Python and PostgreSQL readiness
+PASS question persistence returns ID
+PASS stored UTF-8 question can be read
+PASS empty question rejected
+PASS form submissions rejected
+PASS cross-origin writes rejected
+PASS evaluation is persisted with run ID
+PASS unknown retained and expert unreviewed
+PASS reference policy recorded
+PASS reviewed composite missing without expert
+PASS invalid counts rejected through Java
+PASS request size bounded
+PASS external intake denied by default empty allowlist
+PASS task created queued with location
+PASS task input and creation event persisted
+PASS created task appears in owner list
+PASS stale task version rejected
+PASS queued task cancellation succeeds
+PASS cancellation and event persisted
+PASS terminal task cannot be changed
+PASS invalid evidence condition rejected
+PASS manual note stored as untrusted reference without fetch
+PASS original and interpretation preserved separately
+PASS private export includes note snapshot
+PASS sensitive query source rejected
+PASS same request key returns the original note
+PASS same key with different content rejected
+PASS new key preserves intentional repeated content
+PASS replay and conflict appended no extra note
+PASS invalid request key rejected
+PASS logout succeeds with CSRF
+PASS logged-out session cannot read data
+Integration complete. Authentication tested with actual DB; factual judgments and production deployment remain outside scope.
+
+PASS browser form origin preserved by referrer policy
+PASS anonymous API access denied
+PASS session cookie is HttpOnly and SameSite Strict
+PASS real database-backed login succeeds
+PASS session identifier rotated at login
+PASS pre-login CSRF token rejected after authentication
+PASS JSP renders Korean workbench
+PASS JSP input limits render from shared server policy
+PASS security headers
+PASS Java -> Python and PostgreSQL readiness
+PASS restart fixture task saved
+PASS restart fixture note saved
+RESTART isolated web container
+PASS browser form origin preserved by referrer policy
+PASS anonymous API access denied
+PASS session cookie is HttpOnly and SameSite Strict
+PASS real database-backed login succeeds
+PASS session identifier rotated at login
+PASS pre-login CSRF token rejected after authentication
+PASS JSP renders Korean workbench
+PASS JSP input limits render from shared server policy
+PASS security headers
+PASS Java -> Python and PostgreSQL readiness
+PASS server restart preserves same-key replay result
+PASS server restart replay keeps one original record

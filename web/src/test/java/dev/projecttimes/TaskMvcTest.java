@@ -115,4 +115,22 @@ class TaskMvcTest {
         mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).contentType("application/json").content(mapper.writeValueAsString(body))).andExpect(status().isBadRequest());
         verify(store,times(1)).addNote(eq("alice"),any(),anyString(),anyString(),anyString(),anyString());
     }
+
+    @Test void idempotencyKeyIsValidatedAndPassedWithAuthenticatedOwner() throws Exception {
+        UUID key=UUID.randomUUID(); UUID note=UUID.randomUUID();
+        when(store.addNote(eq("alice"),any(),anyString(),anyString(),anyString(),anyString(),eq(key))).thenReturn(note);
+        String body=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(Map.of("sourceUrl","https://example.org","originalText","text","interpretation","reason","stance","UNVERIFIED"));
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).header("Idempotency-Key",key.toString()).contentType("application/json").content(body))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(note.toString()));
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).header("Idempotency-Key","bad-key").contentType("application/json").content(body))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.error").value("invalid_idempotency_key"));
+        verify(store,times(1)).addNote(eq("alice"),any(),anyString(),anyString(),anyString(),anyString(),eq(key));
+    }
+    @Test void keyConflictIsReportedWithoutEchoingOriginalText() throws Exception {
+        UUID key=UUID.randomUUID();
+        when(store.addNote(eq("alice"),any(),anyString(),anyString(),anyString(),anyString(),eq(key))).thenThrow(new RequestFailure(409,"idempotency_key_conflict"));
+        String body=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(Map.of("sourceUrl","https://example.org","originalText","synthetic private text","interpretation","reason","stance","UNVERIFIED"));
+        mvc.perform(post("/api/tasks/"+id+"/notes").with(user("alice")).with(csrf()).header("Idempotency-Key",key.toString()).contentType("application/json").content(body))
+            .andExpect(status().isConflict()).andExpect(content().json("{\"error\":\"idempotency_key_conflict\"}"));
+    }
 }

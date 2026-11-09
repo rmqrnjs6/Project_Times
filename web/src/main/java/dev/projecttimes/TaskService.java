@@ -13,7 +13,7 @@ public class TaskService {
             throw new RequestFailure(400,"invalid_evidence_requirement");
         return store.create(owner,question.strip(),requirement);
     }
-    public UUID note(String owner,String task,String source,String original,String interpretation,String stance) throws Exception {
+    public UUID note(String owner,String task,String source,String original,String interpretation,String stance,String requestKey) throws Exception {
         UUID taskId=id(task);
         if(original==null || original.isBlank() || original.length()>InputLimits.NOTE_CHARS || interpretation==null || interpretation.isBlank() || interpretation.length()>InputLimits.NOTE_CHARS)
             throw new RequestFailure(400,"invalid_note_text");
@@ -23,8 +23,16 @@ public class TaskService {
             var uri=new java.net.URI(source);
             if(!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost()==null || uri.getUserInfo()!=null || uri.getRawQuery()!=null || uri.getFragment()!=null || (uri.getPort()!=-1 && uri.getPort()!=443)) throw new IllegalArgumentException();
         } catch(Exception e) { throw new RequestFailure(400,"invalid_source_url"); }
+        UUID requestId=null;
+        if(requestKey!=null) {
+            try {
+                requestId=UUID.fromString(requestKey);
+                if(!requestId.toString().equalsIgnoreCase(requestKey)) throw new IllegalArgumentException();
+            } catch(IllegalArgumentException e) { throw new RequestFailure(400,"invalid_idempotency_key"); }
+        }
         // Reference only: no download, parser, DNS lookup, AI processing, or trust certification.
-        return store.addNote(owner,taskId,source,original,interpretation,stance);
+        return requestId==null ? store.addNote(owner,taskId,source,original,interpretation,stance)
+            : store.addNote(owner,taskId,source,original,interpretation,stance,requestId);
     }
     private UUID id(String value) {
         try { var id=UUID.fromString(value); if(!id.toString().equalsIgnoreCase(value)) throw new IllegalArgumentException(); return id; }

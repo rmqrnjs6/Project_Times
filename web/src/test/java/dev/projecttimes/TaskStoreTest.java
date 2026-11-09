@@ -132,4 +132,32 @@ class TaskStoreTest {
         assertThrows(SQLException.class,()->store.addNote("task-alice",task,"https://example.org","text","reason","INVALID"));
         assertEquals(0,((List<?>)store.detail("task-alice",task).get("notes")).size());
     }
+
+    @Test void repeatedKeyReplaysOriginalAndChangedPayloadConflicts() throws Exception {
+        UUID key=UUID.randomUUID();
+        UUID original=store.addNote("task-alice",task,"https://example.org","text","reason","SUPPORTS",key);
+        assertEquals(original,store.addNote("task-alice",task,"https://example.org","text","reason","SUPPORTS",key));
+        assertEquals(409,assertThrows(RequestFailure.class,()->store.addNote("task-alice",task,"https://example.org","changed","reason","SUPPORTS",key)).status);
+        var notes=(List<?>)store.detail("task-alice",task).get("notes");
+        assertEquals(1,notes.size()); assertEquals("text",((Map<?,?>)notes.get(0)).get("original_text"));
+        assertEquals(404,assertThrows(RequestFailure.class,()->store.addNote("task-bob",task,"https://example.org","text","reason","SUPPORTS",key)).status);
+    }
+    @Test void differentKeysKeepIntentionalIdenticalRecordsAndKeysAreTaskScoped() throws Exception {
+        UUID key=UUID.randomUUID();
+        UUID a=store.addNote("task-alice",task,"https://example.org","text","reason","UNVERIFIED",key);
+        UUID b=store.addNote("task-alice",task,"https://example.org","text","reason","UNVERIFIED",UUID.randomUUID());
+        assertNotEquals(a,b);
+        UUID other=store.create("task-bob","other task","PRIMARY_REQUIRED");
+        assertNotEquals(a,store.addNote("task-bob",other,"https://example.org","text","reason","UNVERIFIED",key));
+        assertEquals(2,((List<?>)store.detail("task-alice",task).get("notes")).size());
+    }
+    @Test void concurrentSameKeyAppendsExactlyOnce() throws Exception {
+        UUID key=UUID.randomUUID(); var start=new CountDownLatch(1);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            Callable<UUID> save=()->{ start.await(); return store.addNote("task-alice",task,"https://example.org","text","reason","UNVERIFIED",key); };
+            var a=pool.submit(save); var b=pool.submit(save); start.countDown();
+            assertEquals(a.get(10,TimeUnit.SECONDS),b.get(10,TimeUnit.SECONDS));
+        }
+        assertEquals(1,((List<?>)store.detail("task-alice",task).get("notes")).size());
+    }
 }

@@ -3,6 +3,7 @@ Synthetic inputs only. No paid API calls. Persists diagnostic/calculation rows.
 """
 import json
 import re
+import uuid
 import os
 from http.cookiejar import CookieJar
 from urllib.parse import urlencode
@@ -122,6 +123,21 @@ check('private export includes note snapshot', status == 200 and json.loads(body
 note_input['sourceUrl'] = 'https://example.org/?token=secret'
 status, _, _ = call('/api/tasks/' + task_id + '/notes', note_input)
 check('sensitive query source rejected', status == 400)
+retry_input={'sourceUrl':'https://example.org/retry','originalText':'synthetic retry original','interpretation':'synthetic retry reason','stance':'UNVERIFIED'}
+request_key=str(uuid.uuid4())
+retry_headers={'Content-Type':'application/json','Idempotency-Key':request_key}
+status,body,_=call('/api/tasks/'+task_id+'/notes',retry_input,headers=retry_headers)
+first_note=json.loads(body)['id']
+status,body,_=call('/api/tasks/'+task_id+'/notes',retry_input,headers=retry_headers)
+check('same request key returns the original note',status==201 and json.loads(body)['id']==first_note)
+status,body,_=call('/api/tasks/'+task_id+'/notes',{**retry_input,'interpretation':'changed interpretation'},headers=retry_headers)
+check('same key with different content rejected',status==409 and json.loads(body)['error']=='idempotency_key_conflict')
+status,body,_=call('/api/tasks/'+task_id+'/notes',retry_input,headers={'Content-Type':'application/json','Idempotency-Key':str(uuid.uuid4())})
+check('new key preserves intentional repeated content',status==201 and json.loads(body)['id']!=first_note)
+status,body,_=call('/api/tasks/'+task_id)
+check('replay and conflict appended no extra note',status==200 and len(json.loads(body)['notes'])==3)
+status,_,_=call('/api/tasks/'+task_id+'/notes',retry_input,headers={'Content-Type':'application/json','Idempotency-Key':'invalid'})
+check('invalid request key rejected',status==400)
 status, _, _ = call('/logout', raw=b'', headers={'Content-Type': 'application/x-www-form-urlencoded'})
 check('logout succeeds with CSRF', status == 302)
 status, _, _ = call('/api/checks')

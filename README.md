@@ -2,6 +2,10 @@
 
 공유 대화의 설계를 바탕으로 다시 구현한 **로컬 개발용 검증 작업대**입니다. Spring Boot MVC·Spring Security·JSP·Python FastAPI·PostgreSQL·Docker로 구성합니다. 실제 AI 판별 서비스의 완성본은 아닙니다.
 
+## 코드별 설명 문서
+
+[코드 읽기 지도](docs/CODE_GUIDE.md)에서 Python·Java·DB·JSP·프런트엔드·API·빌드·테스트·CI별 README를 확인할 수 있습니다. 각 문서는 파일별 역할, 처리 순서, 입력과 출력, 실행 방법과 검증 한계를 설명합니다.
+
 ## 질문 입력·평가 작업대
 
 첫 화면에서 검색어를 입력하고 A~E별 파라미터를 확인한 뒤 평가 결과 화면으로 이동하는 Sites 원본을 [독립 기능 모듈](modules/evaluation-workbench/README.md)로 반영했습니다. 기존 Docker·Spring·Python·DB 실행 흐름은 아래와 같이 유지됩니다.

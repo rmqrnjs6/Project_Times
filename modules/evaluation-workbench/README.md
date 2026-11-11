@@ -29,3 +29,9 @@ Sites 환경변수에 MODEL_OWNER_EMAIL, DEEPSEEK_API_KEY, QWEN_API_KEY, QWEN_BA
 이 폴더는 Sites 버전 5의 원본 소스를 기존 `modules/` 규칙에 따라 통합한 독립 작업대입니다. 루트 Docker/Spring/Python/DB 경로는 유지됩니다. Spring 로그인·DB와 이 Worker가 합쳐진 서비스는 아닙니다. 로컬 개발 서버는 127.0.0.1에만 바인딩하고 환경변수·신원 헤더를 Worker에 전달하지 않으므로 유료 호출은 비활성화됩니다. Sites의 플랫폼 인증 헤더를 일반 웹 서버의 사용자 입력 헤더로 대체하면 안 됩니다. 로컬에서 이를 우회하는 인증 URL은 없습니다.
 
 A~C 호출 코드는 구현됐지만 실제 키 연결은 미검증이며 D·E는 미지정 상태입니다. GPT-OSS 120B와 Mistral Small 4는 추천 후보로만 문서에 기록했습니다. 비용 보고서는 [AI 5종 비용 정리](../../docs/research/Project_Times_AI_5_Model_Cost_Summary_2026-11-11.md)를 확인하세요. 이 코드를 커밋하는 것만으로 Sites가 다시 배포되지는 않습니다.
+
+## 코드별 세부 설명
+
+[화면·계산 코드](public/README.md) · [Worker API](worker/README.md) · [빌드·개발 서버](scripts/README.md) · [모의 연동·산술 테스트](tests/README.md)
+
+저장소 전체의 읽는 순서는 [코드 읽기 지도](../../docs/CODE_GUIDE.md)를 확인하세요.

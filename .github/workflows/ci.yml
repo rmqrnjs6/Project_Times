@@ -47,3 +47,12 @@ jobs:
           docker compose exec -T -e TEST_LOGIN_PASSWORD analysis python - < scripts/integration_check.py
       - if: always()
         run: docker compose down
+  evaluation-workbench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check evaluation workbench without credentials or provider calls
+        run: node scripts/workbench.mjs check

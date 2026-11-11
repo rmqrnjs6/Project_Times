@@ -2,6 +2,32 @@
 
 공유 대화의 설계를 바탕으로 다시 구현한 **로컬 개발용 검증 작업대**입니다. Spring Boot MVC·Spring Security·JSP·Python FastAPI·PostgreSQL·Docker로 구성합니다. 실제 AI 판별 서비스의 완성본은 아닙니다.
 
+## 질문 입력·평가 작업대
+
+첫 화면에서 검색어를 입력하고 A~E별 파라미터를 확인한 뒤 평가 결과 화면으로 이동하는 Sites 원본을 [독립 기능 모듈](modules/evaluation-workbench/README.md)로 반영했습니다. 기존 Docker·Spring·Python·DB 실행 흐름은 아래와 같이 유지됩니다.
+
+```mermaid
+flowchart TD
+  R[Project_Times] --> J[기존 Docker 실행]
+  J --> S[Spring 로그인·질문 저장]
+  S --> P[Python 계산·PostgreSQL]
+  R --> M[평가 작업대 모듈]
+  M --> Q[검색어·모델 파라미터]
+  Q --> E[평가 버튼·응답 상태]
+  E --> V[비교 분석·합성 예시 구분]
+```
+
+```sh
+# Node.js 22 이상 · 외부 패키지 설치 불필요
+node scripts/workbench.mjs check
+node scripts/workbench.mjs start
+# http://127.0.0.1:5173/
+```
+
+A~C 서버 어댑터와 입력 흐름이 구현되어 있고, 키 미등록 시 전송하지 않습니다. D·E는 후보 조사만 완료했습니다. 로컬 모듈은 UI 미리보기이며 실제 API 실행은 비활성화되어 있습니다. 기존 로그인·DB와 통합된 AI 평가 서비스라는 뜻은 아닙니다. 실제 공급자 응답의 자동 신뢰점수 산정은 구현하지 않았습니다.
+
+[실행·검증 흐름](docs/WORKFLOW.md) · [AI 5종 비용 보고서](docs/research/Project_Times_AI_5_Model_Cost_Summary_2026-11-11.md) · [이번 검증 범위](docs/verification/WORKBENCH_2026-11-11.md)
+
 ## 시작
 
 Docker Desktop을 실행하고 `.env.example`을 `.env`로 복사한 뒤 `DB_PASSWORD`와 16~64바이트의 무작위 `BOOTSTRAP_PASSWORD`를 설정합니다. 예제에는 비밀번호 기본값이 없어 설정 전에는 시작되지 않습니다. 기존 `.env`는 덮어쓰지 않습니다. `.env`는 커밋하지 않습니다.

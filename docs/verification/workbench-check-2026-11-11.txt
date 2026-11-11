@@ -1,0 +1,20 @@
+Built Worker with 7 embedded assets
+✔ public status contains no secrets or owner email; visitor cannot trigger calls (6.592577ms)
+✔ CSRF, cost confirmation, duplicate model, prompt length fail before upstream (2.648346ms)
+✔ no keys blocks execution without provider calls (0.726196ms)
+✔ three independent adapters send fixed models and caps exactly once (5.431455ms)
+✔ SSE handles reasoning-only chunks and trailing usage without exposing reasoning (1.33855ms)
+✔ provider error is isolated, redacted and never retried (1.562818ms)
+✔ workspace endpoint accepts only allowed HTTPS provider hosts (0.233823ms)
+✔ assets are served with CSP; private source is inaccessible (0.488538ms)
+✔ documented synthetic candidates reproduce 80 and 75 with exact integer numerators (1.281654ms)
+✔ risk is inverted once and all normalized boundaries remain bounded (0.295676ms)
+✔ missing and invalid raw scores cannot silently become a score (0.950435ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 151.876626

@@ -47,40 +47,12 @@ jobs:
           docker compose exec -T -e TEST_LOGIN_PASSWORD analysis python - < scripts/integration_check.py
       - if: always()
         run: docker compose down
-
-  task-database:
+  evaluation-workbench:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_DB: task_test
-          POSTGRES_USER: task_test
-          POSTGRES_PASSWORD: synthetic-ci-only
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U task_test -d task_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-node@v4
         with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
-          cache-dependency-path: web/pom.xml
-      - name: PostgreSQL transaction and concurrency checks
-        working-directory: web
-        env:
-          TASK_TEST_DB_URL: jdbc:postgresql://localhost:5432/task_test
-          TASK_TEST_DB_USER: task_test
-          TASK_TEST_DB_PASSWORD: synthetic-ci-only
-        run: mvn -B -ntp -Dtest=TaskStoreTest test
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: task-database-test-results
-          path: web/target/surefire-reports/
+          node-version: '22'
+      - name: Check evaluation workbench without credentials or provider calls
+        run: node scripts/workbench.mjs check

@@ -1,2 +1,11 @@
-# Common
-Shared code used across features. Avoid coupling unrelated modules.
+# 공통 코드 영역
+
+기준일: 2026-11-11. 코드 확인 기준: `442f869`. 이 문서는 구현 설명이며 실행 성공이나 운영 준비 완료를 뜻하지 않습니다.
+
+현재 이 디렉터리에는 README만 있고 실행되는 공통 라이브러리는 없습니다. 이름만으로 Java·Python·Worker가 코드나 인증·점수 정책을 공유한다고 해석하지 않습니다.
+
+기존 Python 판정 수량 계산은 [app](../app/README.md), 새 작업대의 Q6 원점수 계산은 [평가 화면 코드](../modules/evaluation-workbench/public/README.md)에 있습니다. 입력 형식과 적용 범위가 달라 임의로 같은 구현으로 합치지 않았습니다.
+
+공통 계약을 추가할 때는 소비자·입출력·버전·누락 처리·숫자 정밀도·호환성 테스트를 먼저 명시하고 각 서비스에서 실제 사용하는지 확인하세요. 현재 별도 설치·실행·테스트 명령은 없습니다. 전체 구조는 [코드 읽기 지도](../docs/CODE_GUIDE.md)에서 확인할 수 있습니다.
+
+[전체 코드 읽기 지도](../docs/CODE_GUIDE.md)
